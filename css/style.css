@@ -1,0 +1,327 @@
+/* ==========================================================================
+   MIRATH (ميراث) - ISLAMIC LUXURY GOLD & OBSIDIAN DESIGN SYSTEM
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Cinzel:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Scheherazade+New:wght@400;600;700&display=swap');
+
+:root {
+  --bg-deep: #07080a;
+  --bg-card: rgba(18, 20, 26, 0.75);
+  --bg-card-hover: rgba(26, 29, 38, 0.85);
+  --bg-elevated: #161922;
+  
+  --gold-primary: #D4AF37;
+  --gold-light: #F6E27A;
+  --gold-bright: #FFDF73;
+  --gold-muted: #AA771C;
+  --gold-dark: #664608;
+  --gold-glow: rgba(212, 175, 55, 0.25);
+  --gold-glow-strong: rgba(212, 175, 55, 0.45);
+  --gold-border: rgba(212, 175, 55, 0.22);
+  --gold-border-hover: rgba(212, 175, 55, 0.55);
+
+  --text-main: #F1F1F3;
+  --text-muted: #A2A8B8;
+  --text-dim: #686F82;
+  --emerald-accent: #10B981;
+  --emerald-glow: rgba(16, 185, 129, 0.2);
+
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif: 'Cinzel', Georgia, serif;
+  --font-arabic: 'Amiri', 'Scheherazade New', serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--bg-deep);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.6;
+  background-image: 
+    radial-gradient(circle at 15% 10%, rgba(212, 175, 55, 0.07) 0%, transparent 40%),
+    radial-gradient(circle at 85% 30%, rgba(170, 119, 28, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 50% 80%, rgba(16, 185, 129, 0.04) 0%, transparent 45%),
+    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l7.071 22.929L60 30l-22.929 7.071L30 60l-7.071-22.929L0 30l22.929-7.071z' fill='%23d4af37' fill-opacity='0.018' fill-rule='evenodd'/%3E%3C/svg%3E");
+  background-attachment: fixed;
+}
+
+/* Typography styles */
+.font-cinzel {
+  font-family: var(--font-serif);
+}
+
+.font-arabic {
+  font-family: var(--font-arabic);
+  direction: rtl;
+  line-height: 2.2;
+}
+
+/* Luxury Metallic Gold Gradients */
+.gold-text {
+  background: linear-gradient(135deg, #FFF0B8 0%, #D4AF37 45%, #F4D35E 70%, #AA771C 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
+
+.gold-gradient-bg {
+  background: linear-gradient(135deg, #F3E5AB 0%, #D4AF37 50%, #B38728 100%);
+  color: #07080a;
+}
+
+.gold-gradient-bg-subtle {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(170, 119, 28, 0.05) 100%);
+}
+
+.gold-border {
+  border: 1px solid var(--gold-border);
+}
+
+.gold-border-glow {
+  border: 1px solid var(--gold-border);
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.12);
+}
+
+.gold-border-glow:hover {
+  border-color: var(--gold-border-hover);
+  box-shadow: 0 0 25px rgba(212, 175, 55, 0.25);
+}
+
+/* Glassmorphism Card System */
+.glass-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--gold-border);
+  border-radius: 1rem;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--gold-border-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(212, 175, 55, 0.15);
+}
+
+.glass-pill {
+  background: rgba(25, 28, 36, 0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  transition: all 0.2s ease;
+}
+
+.glass-pill:hover, .glass-pill.active {
+  background: rgba(212, 175, 55, 0.15);
+  border-color: var(--gold-primary);
+  color: var(--gold-light);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #090a0d;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a2e3d;
+  border-radius: 4px;
+  border: 1px solid rgba(212, 175, 55, 0.15);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gold-muted);
+}
+
+/* Arabesque Ornaments */
+.arabesque-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin: 2.5rem 0;
+  opacity: 0.7;
+}
+
+.arabesque-divider::before,
+.arabesque-divider::after {
+  content: '';
+  height: 1px;
+  flex: 1;
+  background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
+}
+
+/* Islamic Rub el Hizb (8-pointed star) badge */
+.rub-el-hizb {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Hifdh Memorization Tool Styles */
+.hifdh-masked-word {
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.25s ease;
+  user-select: none;
+}
+
+.hifdh-mask-active {
+  background: rgba(212, 175, 55, 0.15);
+  color: transparent !important;
+  text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+  border-bottom: 2px dashed var(--gold-primary);
+}
+
+.hifdh-mask-active:hover,
+.hifdh-mask-revealed {
+  background: rgba(212, 175, 55, 0.22);
+  color: #F8ECD1 !important;
+  text-shadow: none;
+}
+
+.blur-translation {
+  filter: blur(6px);
+  user-select: none;
+  transition: filter 0.3s ease;
+}
+
+.blur-translation:hover {
+  filter: blur(0px);
+}
+
+/* Digital Tasbih luxury counter */
+.tasbih-ring-container {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  margin: 0 auto;
+}
+
+.tasbih-btn {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #252a36 0%, #12141a 100%);
+  border: 3px solid var(--gold-primary);
+  box-shadow: 0 0 35px rgba(212, 175, 55, 0.25), inset 0 0 20px rgba(212, 175, 55, 0.15);
+  color: var(--gold-light);
+  cursor: pointer;
+  transition: all 0.15s ease-out;
+  outline: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.tasbih-btn:active {
+  transform: scale(0.94);
+  box-shadow: 0 0 50px rgba(212, 175, 55, 0.4), inset 0 0 30px rgba(212, 175, 55, 0.3);
+  border-color: #FFF0B8;
+}
+
+/* Golden button styles */
+.btn-gold {
+  background: linear-gradient(135deg, #DFC15D 0%, #D4AF37 50%, #9F721B 100%);
+  color: #08080a;
+  font-weight: 700;
+  border: 1px solid #FFE58F;
+  border-radius: 0.75rem;
+  padding: 0.65rem 1.4rem;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.25);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-gold:hover {
+  background: linear-gradient(135deg, #EFE08B 0%, #DFC15D 50%, #B58525 100%);
+  box-shadow: 0 6px 25px rgba(212, 175, 55, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-outline-gold {
+  background: rgba(18, 20, 26, 0.6);
+  color: var(--gold-light);
+  border: 1px solid var(--gold-border);
+  border-radius: 0.75rem;
+  padding: 0.65rem 1.4rem;
+  transition: all 0.25s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-outline-gold:hover {
+  background: rgba(212, 175, 55, 0.12);
+  border-color: var(--gold-primary);
+  color: #FFF;
+}
+
+/* Floating Audio Bar */
+.audio-bar-fixed {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 2rem);
+  max-width: 900px;
+  z-index: 90;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(12, 14, 19, 0.92);
+  border: 1px solid var(--gold-border);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(212, 175, 55, 0.2);
+  border-radius: 1.25rem;
+}
+
+/* Animations */
+@keyframes goldShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.gold-shimmer-effect {
+  background: linear-gradient(90deg, rgba(212,175,55,0) 0%, rgba(212,175,55,0.2) 50%, rgba(212,175,55,0) 100%);
+  background-size: 200% 100%;
+  animation: goldShimmer 4s infinite linear;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(212, 175, 55, 0.15); }
+  50% { box-shadow: 0 0 35px rgba(212, 175, 55, 0.35); }
+}
+
+.pulse-glow {
+  animation: pulseGlow 3s infinite ease-in-out;
+}
+
+/* Modal styling */
+.modal-backdrop {
+  background: rgba(5, 6, 8, 0.85);
+  backdrop-filter: blur(12px);
+}
+
+/* Range input gold styling */
+input[type=range] {
+  accent-color: var(--gold-primary);
+}

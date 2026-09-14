@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MIRATH (ميراث) — The Sacred Islamic Knowledge Treasury</title>
+  <meta name="description" content="An authentic, comprehensive Islamic repository and sanctuary. Qur’an with Mishary Alafasy recitations and Hifdh memorisation tools, authentic Hadith treasury, Duas & Adhkar, Seerah timeline, Prophet & Sahabah chronicles, Aqeedah, Fiqh, Zakat calculator, and quizzes.">
+  <meta name="theme-color" content="#07080a">
+
+  <!-- Favicon / Rub el Hizb SVG -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='15' y='15' width='70' height='70' rx='8' fill='%2307080a' stroke='%23D4AF37' stroke-width='4'/%3E%3Crect x='15' y='15' width='70' height='70' rx='8' transform='rotate(45 50 50)' fill='none' stroke='%23D4AF37' stroke-width='4'/%3E%3Ccircle cx='50' cy='50' r='14' fill='%23D4AF37'/%3E%3C/svg%3E">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Cinzel:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Scheherazade+New:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            deep: '#07080a',
+            obsidian: '#0d0f15',
+            cardBg: 'rgba(18, 20, 26, 0.75)',
+            gold: {
+              light: '#F6E27A',
+              DEFAULT: '#D4AF37',
+              muted: '#AA771C',
+              dark: '#664608'
+            },
+            emerald: {
+              DEFAULT: '#10B981',
+              glow: 'rgba(16, 185, 129, 0.2)'
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            serif: ['"Cinzel"', 'Georgia', 'serif'],
+            arabic: ['"Amiri"', '"Scheherazade New"', 'serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+
+  <style>
+    /* Hide scrollbar for horizontal sub-nav */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-[#07080a] text-[#F1F1F3] min-h-screen selection:bg-[#D4AF37]/30 selection:text-[#FFF0B8] flex flex-col">
+
+  <!-- TOP FIXED LUXURY NAVIGATION BAR -->
+  <header class="sticky top-0 z-40 backdrop-blur-xl bg-[#07080a]/90 border-b border-[#D4AF37]/20 transition-all">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-20">
+        
+        <!-- Brand Logo -->
+        <div class="flex items-center gap-3.5 cursor-pointer" onclick="App.switchTab('home')">
+          <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-[#221c0e] via-[#12141a] to-[#07080a] border border-[#D4AF37] flex items-center justify-center shadow-lg shadow-[#D4AF37]/15 pulse-glow">
+            <svg class="w-6 h-6 text-[#D4AF37]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+              <path d="M12 2L14.8 9.2L22 12L14.8 14.8L12 22L9.2 14.8L2 12L9.2 9.2L12 2Z" fill="#D4AF37" fill-opacity="0.25"/>
+              <circle cx="12" cy="12" r="2.5" fill="#D4AF37"/>
+            </svg>
+          </div>
+          <div>
+            <span class="font-serif text-2xl font-bold tracking-wider gold-text block leading-none">MIRATH</span>
+            <span class="text-[11px] uppercase tracking-[0.2em] text-[#A2A8B8] font-medium block mt-1">ميراث • Islamic Treasury</span>
+          </div>
+        </div>
+
+        <!-- Desktop Quick Search Trigger -->
+        <div class="hidden md:flex items-center flex-1 max-w-md mx-8">
+          <button id="searchTriggerBtn" class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl bg-[#12141d]/80 border border-[#D4AF37]/25 hover:border-[#D4AF37]/60 text-neutral-400 hover:text-neutral-200 transition-all text-sm group shadow-inner">
+            <span class="flex items-center gap-2.5">
+              <svg class="w-4 h-4 text-[#D4AF37] group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              <span>Search Qur'an, Hadith, Duas, Seerah...</span>
+            </span>
+            <kbd class="px-2 py-0.5 text-[10px] font-mono rounded bg-[#1b1e2b] text-neutral-400 border border-neutral-700">Ctrl K</kbd>
+          </button>
+        </div>
+
+        <!-- Action Icons & Navigation Controls -->
+        <div class="flex items-center gap-3">
+          <!-- Mobile Search Button -->
+          <button class="md:hidden p-2.5 rounded-xl bg-[#12141d] border border-[#D4AF37]/20 text-[#F6E27A]" onclick="App.openSearchModal()" title="Search">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          </button>
+
+          <!-- Bookmarks Button -->
+          <button class="relative flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#12141d] border border-[#D4AF37]/30 hover:border-[#D4AF37] text-[#F6E27A] hover:text-white transition-all shadow-md" onclick="App.openBookmarksModal()" title="Saved Bookmarks">
+            <svg class="w-4 h-4 text-[#D4AF37]" fill="currentColor" viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
+            <span class="text-xs font-semibold hidden sm:inline">Bookmarks</span>
+            <span id="bookmarkCountBadge" class="w-5 h-5 rounded-full bg-[#D4AF37] text-black text-[11px] font-bold flex items-center justify-center">0</span>
+          </button>
+
+          <!-- Contributor Studio Button -->
+          <button class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#D4AF37]/20 to-[#AA771C]/20 border border-[#D4AF37] text-[#F6E27A] hover:text-white transition-all shadow-md text-xs font-semibold cursor-pointer" onclick="App.switchTab('admin')" title="Contributor Studio & Editor">
+            <span>✍️</span>
+            <span class="hidden sm:inline">Studio</span>
+          </button>
+
+          <!-- Daily Adhkar Fast Jump -->
+          <button class="hidden lg:inline-flex btn-outline-gold text-xs py-2 px-3.5" onclick="App.switchTab('tasbih')">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span>Tasbih Counter</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- HORIZONTAL SCROLLABLE SUB-NAV FOR ALL MODULES -->
+      <nav class="flex items-center gap-1.5 py-2.5 overflow-x-auto no-scrollbar border-t border-neutral-800/80 -mx-4 px-4 sm:mx-0 sm:px-0">
+        <button data-tab-target="home" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-transparent bg-gradient-to-r from-[#d4af37]/20 to-[#b38728]/20 text-[#F6E27A] border-[#D4AF37]">
+          🏛️ Overview
+        </button>
+        <button data-tab-target="quran" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-transparent text-neutral-400 hover:text-neutral-200 hover:border-neutral-700">
+          📖 Holy Qur'an & Hifdh
+        </button>
+        <button data-tab-target="hadith" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-transparent text-neutral-400 hover:text-neutral-200 hover:border-neutral-700">
+          📜 Hadith Treasury
+        </button>
+        <button data-tab-target="duas" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-transparent text-neutral-400 hover:text-neutral-200 hover:border-neutral-700">
+          🤲 Duas & Adhkar
+        </button>
+        <button data-tab-target="tasbih" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-transparent text-neutral-400 hover:text-neutral-200 hover:border-neutral-700">
+          📿 Digital Tasbih
+        </button>
+        <button data-tab-target="seerah" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-transparent text-neutral-400 hover:text-neutral-200 hover:border-neutral-700">
+          🌙 Seerah Timeline
+        </button>
+        <button data-tab-target="prophets" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-transparent text-neutral-400 hover:text-neutral-200 hover:border-neutral-700">
+          ✨ Stories of Prophets
+        </button>
+        <button data-tab-target="sahabah" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-transparent text-neutral-400 hover:text-neutral-200 hover:border-neutral-700">
+          ⚔️ Noble Sahabah
+        </button>
+        <button data-tab-target="aqeedah" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-transparent text-neutral-400 hover:text-neutral-200 hover:border-neutral-700">
+          🕋 Aqeedah & Fiqh
+        </button>
+        <button data-tab-target="zakat" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-transparent text-neutral-400 hover:text-neutral-200 hover:border-neutral-700">
+          ⚖️ Zakat Calculator
+        </button>
+        <button data-tab-target="quotes" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-transparent text-neutral-400 hover:text-neutral-200 hover:border-neutral-700">
+          💎 Scholar Wisdom
+        </button>
+        <button data-tab-target="quiz" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-transparent text-neutral-400 hover:text-neutral-200 hover:border-neutral-700">
+          🏆 Islamic Quiz
+        </button>
+        <button data-tab-target="admin" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-[#D4AF37]/40 text-[#F6E27A] bg-[#1a160d] hover:border-[#D4AF37]">
+          ✍️ Contributor Studio
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER WITH ALL 12 TAB CONTENT PANELS -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+
+    <!-- ===================================================================== -->
+    <!-- TAB 1: OVERVIEW / HOME -->
+    <!-- ===================================================================== -->
+    <section id="tab-home" class="tab-content-panel space-y-16">
+      
+      <!-- HERO SECTION -->
+      <div class="relative text-center py-10 md:py-16 px-4 rounded-3xl bg-gradient-to-b from-[#141722]/80 via-[#0e1017]/90 to-[#07080a] border border-[#D4AF37]/30 shadow-2xl overflow-hidden">
+        <!-- Ambient radial glow -->
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(212,175,55,0.18)_0%,transparent_65%)] pointer-events-none"></div>
+
+        <!-- Bismillah Calligraphy -->
+        <div class="font-arabic text-3xl sm:text-4xl md:text-5xl gold-text font-bold mb-6 select-none tracking-wide">
+          بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
+        </div>
+
+        <!-- Grand Title -->
+        <h1 class="font-serif text-3xl sm:text-5xl md:text-6xl font-extrabold text-white tracking-tight mb-4">
+          The Sacred Islamic <span class="gold-text">Treasury</span>
+        </h1>
+        
+        <p class="max-w-3xl mx-auto text-neutral-300 text-sm sm:text-base md:text-lg leading-relaxed mb-8 font-light">
+          An authentic, all-in-one sanctuary for the Holy Qur’an with Mishary Alafasy recitations, verified Sahih Hadith, comprehensive Duas & Adhkar, Prophetic Seerah chronicles, Aqeedah, Fiqh, Zakat calculator, and interactive Hifdh memorisation tools.
+        </p>
+
+        <!-- Global Search Bar in Hero -->
+        <div class="max-w-2xl mx-auto mb-8">
+          <div class="relative">
+            <input id="globalSearchInput" type="text" placeholder="Search across Qur'an, Hadith, Duas, Stories & Scholars... (Press /)" class="w-full pl-12 pr-28 py-4 rounded-2xl bg-[#0c0d14] border-2 border-[#D4AF37]/40 hover:border-[#D4AF37] focus:border-[#D4AF37] text-white placeholder-neutral-500 focus:outline-none focus:ring-4 focus:ring-[#D4AF37]/20 text-sm md:text-base shadow-2xl transition-all cursor-pointer">
+            <div class="absolute left-4 top-1/2 -translate-y-1/2 text-[#D4AF37]">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
+            <button class="btn-gold absolute right-2.5 top-1/2 -translate-y-1/2 text-xs py-2 px-4" onclick="App.openSearchModal()">
+              Search
+            </button>
+          </div>
+
+          <!-- Quick Topic Search Pills -->
+          <div class="flex flex-wrap items-center justify-center gap-2 mt-3 text-xs text-neutral-400">
+            <span class="text-neutral-500">Popular:</span>
+            <button class="hover:text-[#F6E27A] underline underline-offset-4 decoration-[#D4AF37]/40" onclick="App.openSearchModal(); document.getElementById('modalSearchInput').value='Ayat al-Kursi'; App.executeSearch('Ayat al-Kursi');">Ayat al-Kursi</button>
+            <span>•</span>
+            <button class="hover:text-[#F6E27A] underline underline-offset-4 decoration-[#D4AF37]/40" onclick="App.openSearchModal(); document.getElementById('modalSearchInput').value='patience'; App.executeSearch('patience');">Patience (Sabr)</button>
+            <span>•</span>
+            <button class="hover:text-[#F6E27A] underline underline-offset-4 decoration-[#D4AF37]/40" onclick="App.openSearchModal(); document.getElementById('modalSearchInput').value='forgiveness'; App.executeSearch('forgiveness');">Forgiveness</button>
+            <span>•</span>
+            <button class="hover:text-[#F6E27A] underline underline-offset-4 decoration-[#D4AF37]/40" onclick="App.openSearchModal(); document.getElementById('modalSearchInput').value='Ibrahim'; App.executeSearch('Ibrahim');">Prophet Ibrahim</button>
+            <span>•</span>
+            <button class="hover:text-[#F6E27A] underline underline-offset-4 decoration-[#D4AF37]/40" onclick="App.openSearchModal(); document.getElementById('modalSearchInput').value='intention'; App.executeSearch('intention');">Intentions</button>
+          </div>
+        </div>
+
+        <!-- Hero CTAs -->
+        <div class="flex flex-wrap items-center justify-center gap-4">
+          <button class="btn-gold px-6 py-3 text-sm md:text-base font-bold shadow-lg shadow-[#D4AF37]/20" onclick="App.switchTab('quran')">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+            <span>Read Qur’an & Hifdh Studio</span>
+          </button>
+          <button class="btn-outline-gold px-6 py-3 text-sm md:text-base font-semibold" onclick="App.switchTab('hadith')">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <span>Explore Hadith Treasury</span>
+          </button>
+          <button class="btn-outline-gold px-6 py-3 text-sm md:text-base font-semibold" onclick="App.switchTab('quiz')">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span>Take Islamic Quiz</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ARABESQUE ORNAMENTAL DIVIDER -->
+      <div class="arabesque-divider">
+        <svg class="w-6 h-6 text-[#D4AF37]" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2L14.8 9.2L22 12L14.8 14.8L12 22L9.2 14.8L2 12L9.2 9.2L12 2Z"/>
+        </svg>
+      </div>
+
+      <!-- FEATURED DUAL SHOWCASE: AYAH OF THE DAY & HADITH OF THE DAY -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        <!-- Ayah of the Day -->
+        <div class="glass-card p-6 md:p-8 border-2 border-[#D4AF37]/40 relative overflow-hidden flex flex-col justify-between">
+          <div class="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/10 rounded-full blur-3xl pointer-events-none"></div>
+          <div>
+            <div class="flex items-center justify-between border-b border-neutral-800 pb-4 mb-5">
+              <div class="flex items-center gap-2.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-[#D4AF37] animate-ping"></span>
+                <span class="text-xs uppercase tracking-wider font-bold text-[#F6E27A]">Ayah of the Day</span>
+              </div>
+              <span class="text-xs px-2.5 py-1 rounded bg-[#D4AF37]/15 text-[#F6E27A] border border-[#D4AF37]/30 font-medium">Surah Al-Baqarah 2:255</span>
+            </div>
+
+            <!-- Ayah Text -->
+            <p class="font-arabic text-2xl md:text-3xl text-right text-[#F6E27A] mb-4 leading-loose">
+              اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ ۚ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ ۚ
+            </p>
+            <p class="text-xs md:text-sm text-neutral-400 italic mb-3">
+              Allāhu lā ilāha illā Huwal-Ḥayyul-Qayyūm. Lā ta'khudhuhū sinatuw-wa lā nawm...
+            </p>
+            <p class="text-neutral-200 text-sm md:text-base leading-relaxed mb-6">
+              "Allah! There is no deity except Him, the Ever-Living, the Sustainer of all existence. Neither drowsiness overtakes Him nor sleep."
+            </p>
+          </div>
+
+          <div class="pt-4 border-t border-neutral-800 flex items-center justify-between">
+            <button class="btn-gold text-xs py-2 px-4 flex items-center gap-2" onclick="App.playAyah(1, 0)">
+              <svg class="w-4 h-4 text-black" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              <span>Listen Recitation</span>
+            </button>
+            <button class="text-xs text-[#F6E27A] hover:underline flex items-center gap-1" onclick="App.switchTab('quran'); App.state.currentSurahIndex=1; App.renderQuranSection();">
+              <span>View Full Surah</span>
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Hadith of the Day -->
+        <div class="glass-card p-6 md:p-8 border-2 border-[#D4AF37]/40 relative overflow-hidden flex flex-col justify-between">
+          <div class="absolute top-0 right-0 w-32 h-32 bg-[#10B981]/10 rounded-full blur-3xl pointer-events-none"></div>
+          <div>
+            <div class="flex items-center justify-between border-b border-neutral-800 pb-4 mb-5">
+              <div class="flex items-center gap-2.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                <span class="text-xs uppercase tracking-wider font-bold text-emerald-400">Hadith of the Day</span>
+              </div>
+              <span class="text-xs px-2.5 py-1 rounded bg-emerald-950/40 text-emerald-300 border border-emerald-500/30 font-semibold">Sahih al-Bukhari #1</span>
+            </div>
+
+            <!-- Hadith Text -->
+            <p class="font-arabic text-xl md:text-2xl text-right text-[#F6E27A] mb-4 leading-loose">
+              إِنَّمَا الأَعْمَالُ بِالنِّيَّاتِ، وَإِنَّمَا لِكُلِّ امْرِئٍ مَا نَوَى...
+            </p>
+            <p class="text-neutral-200 text-sm md:text-base leading-relaxed mb-4">
+              "Actions are judged by intentions, and every person will get what they intended. Whoever migrated for worldly gain or for marriage, his migration will be for what he migrated for."
+            </p>
+            <div class="bg-[#0b0c10] p-3.5 rounded-xl border border-neutral-800/80 text-xs text-neutral-400 mb-6">
+              <span class="text-[#D4AF37] font-bold">Scholarly Insight:</span> Considered by Imam ash-Shafi'i to represent a third of all Islamic jurisprudence and the bedrock of faith.
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-neutral-800 flex items-center justify-between">
+            <span class="text-xs text-neutral-400">Narrator: Umar ibn al-Khattab (RA)</span>
+            <button class="text-xs text-[#F6E27A] hover:underline flex items-center gap-1" onclick="App.switchTab('hadith')">
+              <span>Explore All Hadiths</span>
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- EXPLORE THE 10 KNOWLEDGE MODULES GRID -->
+      <div>
+        <div class="text-center max-w-xl mx-auto mb-10">
+          <h2 class="font-serif text-2xl sm:text-3xl font-bold text-white mb-2">Explore the Knowledge Vaults</h2>
+          <p class="text-xs sm:text-sm text-neutral-400">Navigate the authentic pillars of sacred tradition, jurisprudence, and history.</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          
+          <!-- Card 1: Qur'an & Hifdh -->
+          <div class="glass-card p-6 border border-[#D4AF37]/20 hover:border-[#D4AF37] cursor-pointer group transition-all" onclick="App.switchTab('quran')">
+            <div class="w-12 h-12 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#F6E27A] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+            </div>
+            <h3 class="text-base font-bold text-white mb-1 group-hover:text-[#F6E27A] transition-colors">Qur'an & Hifdh Studio</h3>
+            <p class="text-xs text-neutral-400 leading-relaxed mb-3">Verbatim text with Mishary Alafasy audio, word masking & translation blur for memorisation.</p>
+            <span class="text-xs font-semibold text-[#D4AF37] inline-flex items-center gap-1">Open Qur'an →</span>
+          </div>
+
+          <!-- Card 2: Hadith Treasury -->
+          <div class="glass-card p-6 border border-[#D4AF37]/20 hover:border-[#D4AF37] cursor-pointer group transition-all" onclick="App.switchTab('hadith')">
+            <div class="w-12 h-12 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#F6E27A] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </div>
+            <h3 class="text-base font-bold text-white mb-1 group-hover:text-[#F6E27A] transition-colors">Hadith Treasury</h3>
+            <p class="text-xs text-neutral-400 leading-relaxed mb-3">Sahih al-Bukhari & Muslim traditions with authentic chains, categorizations & commentaries.</p>
+            <span class="text-xs font-semibold text-[#D4AF37] inline-flex items-center gap-1">Explore Hadith →</span>
+          </div>
+
+          <!-- Card 3: Duas & Adhkar -->
+          <div class="glass-card p-6 border border-[#D4AF37]/20 hover:border-[#D4AF37] cursor-pointer group transition-all" onclick="App.switchTab('duas')">
+            <div class="w-12 h-12 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#F6E27A] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/></svg>
+            </div>
+            <h3 class="text-base font-bold text-white mb-1 group-hover:text-[#F6E27A] transition-colors">Duas & Adhkar</h3>
+            <p class="text-xs text-neutral-400 leading-relaxed mb-3">Supplications from Hisn al-Muslim with target counts, virtues, and one-tap Tasbih sync.</p>
+            <span class="text-xs font-semibold text-[#D4AF37] inline-flex items-center gap-1">View Duas →</span>
+          </div>
+
+          <!-- Card 4: Digital Tasbih -->
+          <div class="glass-card p-6 border border-[#D4AF37]/20 hover:border-[#D4AF37] cursor-pointer group transition-all" onclick="App.switchTab('tasbih')">
+            <div class="w-12 h-12 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#F6E27A] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <h3 class="text-base font-bold text-white mb-1 group-hover:text-[#F6E27A] transition-colors">Tactile Digital Tasbih</h3>
+            <p class="text-xs text-neutral-400 leading-relaxed mb-3">Interactive Dhikr beads counter with circular progress, harmonic audio chime, and presets.</p>
+            <span class="text-xs font-semibold text-[#D4AF37] inline-flex items-center gap-1">Start Dhikr →</span>
+          </div>
+
+          <!-- Card 5: Seerah Timeline -->
+          <div class="glass-card p-6 border border-[#D4AF37]/20 hover:border-[#D4AF37] cursor-pointer group transition-all" onclick="App.switchTab('seerah')">
+            <div class="w-12 h-12 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#F6E27A] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            </div>
+            <h3 class="text-base font-bold text-white mb-1 group-hover:text-[#F6E27A] transition-colors">Seerah Timeline</h3>
+            <p class="text-xs text-neutral-400 leading-relaxed mb-3">Chronological milestones of the Final Messenger ﷺ from 570 CE to the Farewell Sermon.</p>
+            <span class="text-xs font-semibold text-[#D4AF37] inline-flex items-center gap-1">Walk the Seerah →</span>
+          </div>
+
+          <!-- Card 6: Stories of the Prophets -->
+          <div class="glass-card p-6 border border-[#D4AF37]/20 hover:border-[#D4AF37] cursor-pointer group transition-all" onclick="App.switchTab('prophets')">
+            <div class="w-12 h-12 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#F6E27A] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+            </div>
+            <h3 class="text-base font-bold text-white mb-1 group-hover:text-[#F6E27A] transition-colors">Stories of the Prophets</h3>
+            <p class="text-xs text-neutral-400 leading-relaxed mb-3">The trials, steadfastness, and triumphs of Adam, Ibrahim, Musa, Yusuf, and Isa (AS).</p>
+            <span class="text-xs font-semibold text-[#D4AF37] inline-flex items-center gap-1">Read Stories →</span>
+          </div>
+
+          <!-- Card 7: Noble Sahabah -->
+          <div class="glass-card p-6 border border-[#D4AF37]/20 hover:border-[#D4AF37] cursor-pointer group transition-all" onclick="App.switchTab('sahabah')">
+            <div class="w-12 h-12 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#F6E27A] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            </div>
+            <h3 class="text-base font-bold text-white mb-1 group-hover:text-[#F6E27A] transition-colors">The Noble Sahabah</h3>
+            <p class="text-xs text-neutral-400 leading-relaxed mb-3">Virtues, sacrifices, and inspiring biographies of the Rightly Guided Caliphs and Companions.</p>
+            <span class="text-xs font-semibold text-[#D4AF37] inline-flex items-center gap-1">Meet Sahabah →</span>
+          </div>
+
+          <!-- Card 8: Aqeedah & Fiqh -->
+          <div class="glass-card p-6 border border-[#D4AF37]/20 hover:border-[#D4AF37] cursor-pointer group transition-all" onclick="App.switchTab('aqeedah')">
+            <div class="w-12 h-12 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#F6E27A] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+            </div>
+            <h3 class="text-base font-bold text-white mb-1 group-hover:text-[#F6E27A] transition-colors">Aqeedah & Fiqh</h3>
+            <p class="text-xs text-neutral-400 leading-relaxed mb-3">The 6 Pillars of Iman and practical illustrated steps for Wudu, Salah, and purification.</p>
+            <span class="text-xs font-semibold text-[#D4AF37] inline-flex items-center gap-1">Study Pillars →</span>
+          </div>
+
+          <!-- Card 9: Zakat Calculator -->
+          <div class="glass-card p-6 border border-[#D4AF37]/20 hover:border-[#D4AF37] cursor-pointer group transition-all" onclick="App.switchTab('zakat')">
+            <div class="w-12 h-12 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#F6E27A] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+            </div>
+            <h3 class="text-base font-bold text-white mb-1 group-hover:text-[#F6E27A] transition-colors">Zakat Calculator</h3>
+            <p class="text-xs text-neutral-400 leading-relaxed mb-3">Instant 2.5% calculation on cash, gold, silver, investments with live Nisab verification.</p>
+            <span class="text-xs font-semibold text-[#D4AF37] inline-flex items-center gap-1">Calculate Zakat →</span>
+          </div>
+
+          <!-- Card 10: Scholar Quotes & Quiz -->
+          <div class="glass-card p-6 border border-[#D4AF37]/20 hover:border-[#D4AF37] cursor-pointer group transition-all" onclick="App.switchTab('quotes')">
+            <div class="w-12 h-12 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#F6E27A] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+            </div>
+            <h3 class="text-base font-bold text-white mb-1 group-hover:text-[#F6E27A] transition-colors">Scholar Wisdom</h3>
+            <p class="text-xs text-neutral-400 leading-relaxed mb-3">Timeless aphorisms from Hasan al-Basri, Imam ash-Shafi'i, Ibn al-Qayyim, and Ahmad.</p>
+            <span class="text-xs font-semibold text-[#D4AF37] inline-flex items-center gap-1">Read Quotes →</span>
+          </div>
+
+          <!-- Card 11: Islamic Knowledge Quiz -->
+          <div class="glass-card p-6 border border-[#D4AF37]/20 hover:border-[#D4AF37] cursor-pointer group transition-all sm:col-span-2 lg:col-span-2" onclick="App.switchTab('quiz')">
+            <div class="flex items-start gap-4">
+              <div class="w-12 h-12 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#F6E27A] flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-white mb-1 group-hover:text-[#F6E27A] transition-colors">Interactive Islamic Quiz</h3>
+                <p class="text-xs text-neutral-400 leading-relaxed mb-3">Test your knowledge across revelation history, prophetic miracles, and companions with verified authentic references.</p>
+                <span class="text-xs font-semibold text-[#D4AF37] inline-flex items-center gap-1">Start Quiz Challenge →</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- TAB 2: HOLY QUR'AN & HIFDH STUDIO -->
+    <!-- ===================================================================== -->
+    <section id="tab-quran" class="tab-content-panel hidden space-y-8">
+      <!-- Section Header -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#D4AF37]/20 pb-6">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <span class="text-xs font-bold uppercase tracking-wider text-[#D4AF37]">Al-Qur'an al-Kareem</span>
+            <span class="text-xs px-2 py-0.5 rounded bg-[#D4AF37]/10 text-[#F6E27A] border border-[#D4AF37]/20">Mishary Alafasy Recitations</span>
+          </div>
+          <h2 class="font-serif text-3xl font-bold text-white">The Holy Qur'an & Hifdh Studio</h2>
+          <p class="text-xs sm:text-sm text-neutral-400 mt-1">Uthmani Arabic text with verbatim translations, audio repetitions, and interactive word masking for memorisation.</p>
+        </div>
+
+        <!-- Surah Selector -->
+        <div class="min-w-[280px]">
+          <label for="surahSelectDropdown" class="block text-xs text-neutral-400 font-medium mb-1.5">Select Surah / Passage:</label>
+          <div class="relative">
+            <select id="surahSelectDropdown" class="w-full bg-[#12141d] border-2 border-[#D4AF37]/40 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#D4AF37] cursor-pointer">
+              <!-- Dynamically populated -->
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Surah Rendering Container (Populated by App.renderQuranSection) -->
+      <div id="quranSurahContainer"></div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- TAB 3: HADITH TREASURY -->
+    <!-- ===================================================================== -->
+    <section id="tab-hadith" class="tab-content-panel hidden space-y-8">
+      <div class="border-b border-[#D4AF37]/20 pb-6">
+        <span class="text-xs font-bold uppercase tracking-wider text-[#D4AF37]">As-Sunnah an-Nabawiyyah</span>
+        <h2 class="font-serif text-3xl font-bold text-white mt-1">Authentic Hadith Treasury</h2>
+        <p class="text-xs sm:text-sm text-neutral-400 mt-1">Rigorous prophetic traditions from Sahih al-Bukhari and Sahih Muslim with verified chains and scholarly insights.</p>
+      </div>
+
+      <!-- Category Filter Pills -->
+      <div>
+        <div class="text-xs text-neutral-400 mb-2 font-medium">Filter by Topic:</div>
+        <div id="hadithCategoryFilter" class="flex flex-wrap gap-2"></div>
+      </div>
+
+      <!-- Hadiths Grid Container -->
+      <div id="hadithsGridContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- TAB 4: DUAS & ADHKAR -->
+    <!-- ===================================================================== -->
+    <section id="tab-duas" class="tab-content-panel hidden space-y-8">
+      <div class="border-b border-[#D4AF37]/20 pb-6">
+        <span class="text-xs font-bold uppercase tracking-wider text-[#D4AF37]">Hisn al-Muslim (حصن المسلم)</span>
+        <h2 class="font-serif text-3xl font-bold text-white mt-1">Authentic Duas & Daily Adhkar</h2>
+        <p class="text-xs sm:text-sm text-neutral-400 mt-1">Daily fortress supplications for morning, evening, protection, and forgiveness. Click "Counter" on any Dua to sync directly with the digital Tasbih.</p>
+      </div>
+
+      <!-- Duas Grid Container -->
+      <div id="duasGridContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- TAB 5: TACTILE DIGITAL TASBIH -->
+    <!-- ===================================================================== -->
+    <section id="tab-tasbih" class="tab-content-panel hidden space-y-12">
+      <div class="text-center max-w-2xl mx-auto border-b border-[#D4AF37]/20 pb-6">
+        <span class="text-xs font-bold uppercase tracking-wider text-[#D4AF37]">المسبحة الإلكترونية المباركة</span>
+        <h2 class="font-serif text-3xl sm:text-4xl font-bold text-white mt-1">Interactive Digital Tasbih</h2>
+        <p class="text-xs sm:text-sm text-neutral-400 mt-1">Tactile counter with circular gold progress ring, synthesized harmonic chime on every bead, and target completion alerts.</p>
+      </div>
+
+      <!-- Tasbih Widget Section -->
+      <div id="tasbihWidgetSection" class="glass-card p-8 md:p-12 max-w-xl mx-auto text-center border-2 border-[#D4AF37]/40 shadow-2xl relative overflow-hidden">
+        
+        <!-- Active Dhikr Labels -->
+        <div class="mb-8">
+          <div id="tasbihActiveLabel" class="font-arabic text-3xl sm:text-4xl gold-text font-bold mb-3 min-h-[50px] flex items-center justify-center">
+            سُبْحَانَ اللَّهِ
+          </div>
+          <div id="tasbihActiveMeaning" class="text-xs sm:text-sm text-neutral-400 font-medium">
+            Glory be to Allah (Target: 33)
+          </div>
+        </div>
+
+        <!-- The Circular Ring & Tap Button -->
+        <div class="tasbih-ring-container relative flex items-center justify-center mb-8">
+          <svg class="w-[220px] h-[220px] transform -rotate-90 pointer-events-none" viewBox="0 0 200 200">
+            <!-- Background track -->
+            <circle cx="100" cy="100" r="90" stroke="rgba(212,175,55,0.15)" stroke-width="8" fill="none"></circle>
+            <!-- Animated progress ring (r=90, circumference = 2 * PI * 90 = 565.48) -->
+            <circle id="tasbihProgressCircle" cx="100" cy="100" r="90" stroke="#D4AF37" stroke-width="8" stroke-dasharray="565.48" stroke-dashoffset="565.48" stroke-linecap="round" fill="none" class="transition-all duration-300"></circle>
+          </svg>
+
+          <!-- The Clickable Tap Bead -->
+          <button class="tasbih-btn absolute group" onclick="App.incrementTasbih()" title="Click or tap to count">
+            <span id="tasbihCounterDisplay" class="text-4xl sm:text-5xl font-mono font-bold text-[#F6E27A] group-active:scale-95 transition-transform">0</span>
+            <span class="text-[10px] uppercase tracking-widest text-[#D4AF37]/80 mt-1 font-semibold">TAP / COUNT</span>
+          </button>
+        </div>
+
+        <!-- Control Action Bar -->
+        <div class="flex items-center justify-center gap-3">
+          <button class="px-4 py-2 rounded-xl bg-[#141722] hover:bg-[#1f2333] border border-neutral-700 text-neutral-300 text-xs font-semibold transition-all flex items-center gap-1.5" onclick="App.resetTasbih()">
+            <svg class="w-3.5 h-3.5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            Reset
+          </button>
+          <button class="px-4 py-2 rounded-xl bg-[#141722] hover:bg-[#1f2333] border border-neutral-700 text-neutral-300 text-xs font-semibold transition-all" onclick="App.state.tasbihTarget=33; App.updateTasbihUI();">
+            Target 33
+          </button>
+          <button class="px-4 py-2 rounded-xl bg-[#141722] hover:bg-[#1f2333] border border-neutral-700 text-neutral-300 text-xs font-semibold transition-all" onclick="App.state.tasbihTarget=100; App.updateTasbihUI();">
+            Target 100
+          </button>
+          <button class="px-4 py-2 rounded-xl bg-[#141722] hover:bg-[#1f2333] border border-neutral-700 text-neutral-300 text-xs font-semibold transition-all" onclick="App.state.tasbihTarget=1000; App.updateTasbihUI();">
+            Target 1000
+          </button>
+        </div>
+      </div>
+
+      <!-- Authentic Dhikr Presets Grid -->
+      <div class="max-w-4xl mx-auto">
+        <h3 class="text-center font-serif text-xl font-bold text-white mb-6">Authentic Dhikr Presets</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          
+          <div class="glass-card p-4 text-center cursor-pointer border border-[#D4AF37]/20 hover:border-[#D4AF37] transition-all" onclick="App.setTasbihPreset('سُبْحَانَ اللَّهِ', 'Glory be to Allah', 33)">
+            <div class="font-arabic text-xl text-[#F6E27A] mb-1">سُبْحَانَ اللَّهِ</div>
+            <div class="text-xs text-white font-semibold">SubhanAllah</div>
+            <div class="text-[11px] text-neutral-400 mt-1">33 repetitions</div>
+          </div>
+
+          <div class="glass-card p-4 text-center cursor-pointer border border-[#D4AF37]/20 hover:border-[#D4AF37] transition-all" onclick="App.setTasbihPreset('الْحَمْدُ لِلَّهِ', 'Praise be to Allah', 33)">
+            <div class="font-arabic text-xl text-[#F6E27A] mb-1">الْحَمْدُ لِلَّهِ</div>
+            <div class="text-xs text-white font-semibold">Alhamdulillah</div>
+            <div class="text-[11px] text-neutral-400 mt-1">33 repetitions</div>
+          </div>
+
+          <div class="glass-card p-4 text-center cursor-pointer border border-[#D4AF37]/20 hover:border-[#D4AF37] transition-all" onclick="App.setTasbihPreset('اللَّهُ أَكْبَرُ', 'Allah is the Greatest', 34)">
+            <div class="font-arabic text-xl text-[#F6E27A] mb-1">اللَّهُ أَكْبَرُ</div>
+            <div class="text-xs text-white font-semibold">Allahu Akbar</div>
+            <div class="text-[11px] text-neutral-400 mt-1">34 repetitions</div>
+          </div>
+
+          <div class="glass-card p-4 text-center cursor-pointer border border-[#D4AF37]/20 hover:border-[#D4AF37] transition-all" onclick="App.setTasbihPreset('أَسْتَغْفِرُ اللَّهَ', 'I seek forgiveness from Allah', 100)">
+            <div class="font-arabic text-xl text-[#F6E27A] mb-1">أَسْتَغْفِرُ اللَّهَ</div>
+            <div class="text-xs text-white font-semibold">Astaghfirullah</div>
+            <div class="text-[11px] text-neutral-400 mt-1">100 repetitions</div>
+          </div>
+
+          <div class="glass-card p-4 text-center cursor-pointer border border-[#D4AF37]/20 hover:border-[#D4AF37] transition-all" onclick="App.setTasbihPreset('لَا إِلَٰهَ إِلَّا اللَّهُ', 'None has the right to be worshipped but Allah', 100)">
+            <div class="font-arabic text-xl text-[#F6E27A] mb-1">لَا إِلَٰهَ إِلَّا اللَّهُ</div>
+            <div class="text-xs text-white font-semibold">La ilaha illallah</div>
+            <div class="text-[11px] text-neutral-400 mt-1">100 repetitions</div>
+          </div>
+
+          <div class="glass-card p-4 text-center cursor-pointer border border-[#D4AF37]/20 hover:border-[#D4AF37] transition-all" onclick="App.setTasbihPreset('سُبْحَانَ اللَّهِ وَبِحَمْدِهِ', 'Glory and praise be to Allah', 100)">
+            <div class="font-arabic text-xl text-[#F6E27A] mb-1">سُبْحَانَ اللَّهِ وَبِحَمْدِهِ</div>
+            <div class="text-xs text-white font-semibold">SubhanAllahi wa bihamdihi</div>
+            <div class="text-[11px] text-neutral-400 mt-1">100 repetitions</div>
+          </div>
+
+          <div class="glass-card p-4 text-center cursor-pointer border border-[#D4AF37]/20 hover:border-[#D4AF37] transition-all" onclick="App.setTasbihPreset('لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ', 'No power nor strength except with Allah', 100)">
+            <div class="font-arabic text-xl text-[#F6E27A] mb-1">لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ</div>
+            <div class="text-xs text-white font-semibold">La hawla wa la quwwata</div>
+            <div class="text-[11px] text-neutral-400 mt-1">100 repetitions</div>
+          </div>
+
+          <div class="glass-card p-4 text-center cursor-pointer border border-[#D4AF37]/20 hover:border-[#D4AF37] transition-all" onclick="App.setTasbihPreset('حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ', 'Allah is sufficient for us and He is the best disposer of affairs', 100)">
+            <div class="font-arabic text-xl text-[#F6E27A] mb-1">حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ</div>
+            <div class="text-xs text-white font-semibold">HasbunAllahu wa ni'mal wakeel</div>
+            <div class="text-[11px] text-neutral-400 mt-1">100 repetitions</div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- TAB 6: SEERAH TIMELINE -->
+    <!-- ===================================================================== -->
+    <section id="tab-seerah" class="tab-content-panel hidden space-y-8">
+      <div class="border-b border-[#D4AF37]/20 pb-6">
+        <span class="text-xs font-bold uppercase tracking-wider text-[#D4AF37]">السيرة النبوية الشريفة</span>
+        <h2 class="font-serif text-3xl font-bold text-white mt-1">The Prophetic Journey & Milestones</h2>
+        <p class="text-xs sm:text-sm text-neutral-400 mt-1">Follow the chronological timeline of Prophet Muhammad ﷺ from birth through divine revelation, persecution, migration, and the establishment of justice.</p>
+      </div>
+
+      <!-- Seerah Timeline Container -->
+      <div id="seerahTimelineContainer" class="max-w-4xl mx-auto"></div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- TAB 7: STORIES OF THE PROPHETS -->
+    <!-- ===================================================================== -->
+    <section id="tab-prophets" class="tab-content-panel hidden space-y-8">
+      <div class="border-b border-[#D4AF37]/20 pb-6">
+        <span class="text-xs font-bold uppercase tracking-wider text-[#D4AF37]">قصص الأنبياء عليهم السلام</span>
+        <h2 class="font-serif text-3xl font-bold text-white mt-1">Stories of the Prophets</h2>
+        <p class="text-xs sm:text-sm text-neutral-400 mt-1">The exemplary patience, faith, and trials of Allah's chosen emissaries from Adam to Isa (Peace Be Upon Them) with Qur'anic references.</p>
+      </div>
+
+      <!-- Prophets Grid Container -->
+      <div id="prophetsGridContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- TAB 8: THE NOBLE SAHABAH -->
+    <!-- ===================================================================== -->
+    <section id="tab-sahabah" class="tab-content-panel hidden space-y-8">
+      <div class="border-b border-[#D4AF37]/20 pb-6">
+        <span class="text-xs font-bold uppercase tracking-wider text-[#D4AF37]">الصحابة الكرام رضي الله عنهم</span>
+        <h2 class="font-serif text-3xl font-bold text-white mt-1">The Noble Companions (Sahabah)</h2>
+        <p class="text-xs sm:text-sm text-neutral-400 mt-1">Biographies, unshakeable courage, selflessness, and inspiring sayings of the blessed generation that carried the light of Islam.</p>
+      </div>
+
+      <!-- Sahabah Grid Container -->
+      <div id="sahabahGridContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- TAB 9: AQEEDAH & PRACTICAL FIQH -->
+    <!-- ===================================================================== -->
+    <section id="tab-aqeedah" class="tab-content-panel hidden space-y-12">
+      <div class="border-b border-[#D4AF37]/20 pb-6">
+        <span class="text-xs font-bold uppercase tracking-wider text-[#D4AF37]">أركان الإيمان والفقه الإسلامي</span>
+        <h2 class="font-serif text-3xl font-bold text-white mt-1">Aqeedah & Practical Fiqh</h2>
+        <p class="text-xs sm:text-sm text-neutral-400 mt-1">The 6 Foundational Pillars of Iman (Faith) and step-by-step practical jurisprudence guides for Wudu, Salah, and purification.</p>
+      </div>
+
+      <!-- Part 1: The 6 Pillars of Iman -->
+      <div>
+        <h3 class="font-serif text-2xl font-bold text-white mb-4 flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-[#D4AF37]"></span>
+          <span>The Six Pillars of Iman (Faith)</span>
+        </h3>
+        <div id="aqeedahPillarsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+      </div>
+
+      <!-- Part 2: Practical Fiqh Guides -->
+      <div>
+        <h3 class="font-serif text-2xl font-bold text-white mb-4 flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
+          <span>Practical Fiqh Step-by-Step Guides</span>
+        </h3>
+        <div id="fiqhGuidesContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- TAB 10: ZAKAT & NISAB CALCULATOR -->
+    <!-- ===================================================================== -->
+    <section id="tab-zakat" class="tab-content-panel hidden space-y-10">
+      <div class="border-b border-[#D4AF37]/20 pb-6">
+        <span class="text-xs font-bold uppercase tracking-wider text-[#D4AF37]">الركن الثالث من أركان الإسلام</span>
+        <h2 class="font-serif text-3xl font-bold text-white mt-1">Zakat & Nisab Wealth Calculator</h2>
+        <p class="text-xs sm:text-sm text-neutral-400 mt-1">Calculate your mandatory 2.5% annual Zakat on qualifying savings, gold, silver, and business investments based on Islamic jurisprudence.</p>
+      </div>
+
+      <!-- Calculator Form & Output Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Inputs Form Column (7 cols) -->
+        <div class="lg:col-span-7 glass-card p-6 md:p-8 border border-[#D4AF37]/30 space-y-5">
+          <h3 class="text-lg font-bold text-white border-b border-neutral-800 pb-3 flex items-center justify-between">
+            <span>Enter Qualifying Assets</span>
+            <span class="text-xs text-[#D4AF37] font-normal">Currency in USD ($)</span>
+          </h3>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="zakatCash" class="block text-xs font-medium text-neutral-300 mb-1">Cash in Bank & in Hand ($):</label>
+              <input id="zakatCash" type="number" min="0" placeholder="0.00" oninput="App.calculateZakat()" class="w-full bg-[#0c0e14] border border-neutral-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-[#D4AF37]">
+            </div>
+
+            <div>
+              <label for="zakatGold" class="block text-xs font-medium text-neutral-300 mb-1">Gold Value ($):</label>
+              <input id="zakatGold" type="number" min="0" placeholder="0.00" oninput="App.calculateZakat()" class="w-full bg-[#0c0e14] border border-neutral-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-[#D4AF37]">
+            </div>
+
+            <div>
+              <label for="zakatSilver" class="block text-xs font-medium text-neutral-300 mb-1">Silver Value ($):</label>
+              <input id="zakatSilver" type="number" min="0" placeholder="0.00" oninput="App.calculateZakat()" class="w-full bg-[#0c0e14] border border-neutral-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-[#D4AF37]">
+            </div>
+
+            <div>
+              <label for="zakatInvestments" class="block text-xs font-medium text-neutral-300 mb-1">Stocks & Merchandise ($):</label>
+              <input id="zakatInvestments" type="number" min="0" placeholder="0.00" oninput="App.calculateZakat()" class="w-full bg-[#0c0e14] border border-neutral-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-[#D4AF37]">
+            </div>
+
+            <div>
+              <label for="zakatDebts" class="block text-xs font-medium text-neutral-300 mb-1">Immediate Debts & Liabilities ($):</label>
+              <input id="zakatDebts" type="number" min="0" placeholder="0.00" oninput="App.calculateZakat()" class="w-full bg-[#0c0e14] border border-neutral-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-[#D4AF37]">
+            </div>
+
+            <div>
+              <label for="zakatNisabThreshold" class="block text-xs font-medium text-neutral-300 mb-1">Nisab Threshold ($):</label>
+              <input id="zakatNisabThreshold" type="number" min="0" value="550" oninput="App.calculateZakat()" class="w-full bg-[#0c0e14] border border-neutral-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-[#D4AF37]">
+              <span class="text-[10px] text-neutral-500 block mt-1">Default ~$550 (Silver standard: 595g)</span>
+            </div>
+          </div>
+
+          <div class="pt-2">
+            <button class="btn-gold w-full text-xs py-2.5" onclick="App.calculateZakat()">
+              Recalculate Zakat
+            </button>
+          </div>
+        </div>
+
+        <!-- Result Box & Guidelines (5 cols) -->
+        <div class="lg:col-span-5 space-y-6">
+          <div id="zakatResultBox"></div>
+
+          <!-- Jurisprudence Box -->
+          <div class="glass-card p-6 border border-neutral-800 text-xs text-neutral-300 space-y-3">
+            <h4 class="font-bold text-[#F6E27A] flex items-center gap-1.5 text-sm">
+              <svg class="w-4 h-4 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <span>Key Fiqh Rules of Zakat</span>
+            </h4>
+            <p><strong>Nisab:</strong> The minimum wealth threshold a Muslim must possess before Zakat is due. Typically evaluated against 85g of gold or 595g of silver (the silver standard is more beneficial to the poor).</p>
+            <p><strong>Hawl:</strong> Zakat is due once one full lunar year (approx. 354 days) has passed while maintaining wealth at or above Nisab.</p>
+            <p><strong>Beneficiaries (Surah At-Tawbah 9:60):</strong> The poor, the needy, administrators of Zakat, hearts to be reconciled, freeing captives, those in debt, in the cause of Allah, and the stranded traveler.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- TAB 11: SCHOLAR WISDOM & QUOTES -->
+    <!-- ===================================================================== -->
+    <section id="tab-quotes" class="tab-content-panel hidden space-y-8">
+      <div class="border-b border-[#D4AF37]/20 pb-6">
+        <span class="text-xs font-bold uppercase tracking-wider text-[#D4AF37]">أقوال السلف والعلماء الربانيين</span>
+        <h2 class="font-serif text-3xl font-bold text-white mt-1">Wisdom of the Classical Scholars</h2>
+        <p class="text-xs sm:text-sm text-neutral-400 mt-1">Timeless aphorisms on the purification of the heart, sincerity, humility, knowledge, and endurance from Islamic luminaries.</p>
+      </div>
+
+      <!-- Scholar Quotes Grid Container -->
+      <div id="scholarQuotesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- TAB 12: INTERACTIVE ISLAMIC QUIZ -->
+    <!-- ===================================================================== -->
+    <section id="tab-quiz" class="tab-content-panel hidden space-y-8">
+      <div class="text-center max-w-xl mx-auto border-b border-[#D4AF37]/20 pb-6">
+        <span class="text-xs font-bold uppercase tracking-wider text-[#D4AF37]">اختبر معلوماتك الإسلامية</span>
+        <h2 class="font-serif text-3xl font-bold text-white mt-1">Interactive Islamic Quiz</h2>
+        <p class="text-xs sm:text-sm text-neutral-400 mt-1">Challenge and strengthen your knowledge across Qur’anic sciences, Hadith literature, and prophetic history with verified explanations.</p>
+      </div>
+
+      <!-- Quiz Card Container -->
+      <div id="quizCardContainer"></div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- TAB 13: CONTRIBUTOR STUDIO & DATA MANAGEMENT -->
+    <!-- ===================================================================== -->
+    <section id="tab-admin" class="tab-content-panel hidden space-y-10">
+      
+      <!-- Studio Header -->
+      <div class="relative p-6 md:p-8 rounded-3xl bg-gradient-to-r from-[#171a24] via-[#0f1118] to-[#07080a] border-2 border-[#D4AF37]/40 shadow-2xl">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div>
+            <div class="flex items-center gap-2.5 mb-2">
+              <span class="w-3 h-3 rounded-full bg-[#D4AF37] animate-pulse"></span>
+              <span class="text-xs font-bold uppercase tracking-widest text-[#F6E27A]">Personal Repository Curator</span>
+            </div>
+            <h2 class="font-serif text-3xl sm:text-4xl font-bold text-white mb-2">
+              Contributor Studio & Repository Editor
+            </h2>
+            <p class="text-xs sm:text-sm text-neutral-300 max-w-2xl leading-relaxed">
+              Add, curate, or delete Hadiths, Duas, Scholar Quotes, Prophet Stories, Sahabah chronicles, and Quizzes whenever you or your fiancée want. Changes reflect live across the treasury immediately.
+            </p>
+          </div>
+
+          <!-- Total Counter Badge -->
+          <div class="flex flex-col items-start lg:items-end gap-2 shrink-0">
+            <span id="adminTotalStatsBadge" class="px-4 py-2 rounded-2xl bg-[#D4AF37]/15 text-[#F6E27A] border border-[#D4AF37]/40 text-xs font-mono font-bold shadow-md">
+              0 Custom Items Curated
+            </span>
+            <span class="text-[11px] text-neutral-400">Stored locally & cloud-sync ready</span>
+          </div>
+        </div>
+
+        <!-- Live Statistics Counter Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 mt-6 pt-6 border-t border-neutral-800">
+          <div class="p-3 rounded-xl bg-[#090b10] border border-neutral-800 text-center">
+            <span id="statCustomHadiths" class="block font-mono text-xl font-bold gold-text">0</span>
+            <span class="text-[10px] uppercase text-neutral-400 font-medium">Hadiths</span>
+          </div>
+          <div class="p-3 rounded-xl bg-[#090b10] border border-neutral-800 text-center">
+            <span id="statCustomDuas" class="block font-mono text-xl font-bold text-emerald-400">0</span>
+            <span class="text-[10px] uppercase text-neutral-400 font-medium">Duas</span>
+          </div>
+          <div class="p-3 rounded-xl bg-[#090b10] border border-neutral-800 text-center">
+            <span id="statCustomQuotes" class="block font-mono text-xl font-bold text-amber-300">0</span>
+            <span class="text-[10px] uppercase text-neutral-400 font-medium">Quotes</span>
+          </div>
+          <div class="p-3 rounded-xl bg-[#090b10] border border-neutral-800 text-center">
+            <span id="statCustomProphets" class="block font-mono text-xl font-bold text-cyan-300">0</span>
+            <span class="text-[10px] uppercase text-neutral-400 font-medium">Prophets</span>
+          </div>
+          <div class="p-3 rounded-xl bg-[#090b10] border border-neutral-800 text-center">
+            <span id="statCustomSahabah" class="block font-mono text-xl font-bold text-indigo-300">0</span>
+            <span class="text-[10px] uppercase text-neutral-400 font-medium">Sahabah</span>
+          </div>
+          <div class="p-3 rounded-xl bg-[#090b10] border border-neutral-800 text-center">
+            <span id="statCustomQuiz" class="block font-mono text-xl font-bold text-rose-300">0</span>
+            <span class="text-[10px] uppercase text-neutral-400 font-medium">Quizzes</span>
+          </div>
+        </div>
+
+        <!-- Data Action Ribbon -->
+        <div class="flex flex-wrap items-center gap-3 mt-6 pt-6 border-t border-neutral-800/80">
+          <!-- Download Updated data.js -->
+          <button class="btn-gold text-xs py-2 px-3.5 flex items-center gap-1.5 shadow-md" onclick="App.exportUpdatedDataJs()" title="Download an updated data.js file to commit to git or deploy">
+            <svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            <span>Download Updated data.js</span>
+          </button>
+
+          <!-- Export JSON Backup -->
+          <button class="btn-outline-gold text-xs py-2 px-3.5 flex items-center gap-1.5" onclick="App.exportJsonBackup()" title="Download a portable .json backup file">
+            <svg class="w-4 h-4 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+            <span>Export Backup (.json)</span>
+          </button>
+
+          <!-- Import JSON Backup -->
+          <label class="btn-outline-gold text-xs py-2 px-3.5 flex items-center gap-1.5 cursor-pointer">
+            <svg class="w-4 h-4 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            <span>Import Backup</span>
+            <input type="file" accept=".json" class="hidden" onchange="App.importJsonBackup(this)">
+          </label>
+
+          <!-- Cloud Sync Toggle Button -->
+          <button class="px-3.5 py-2 rounded-xl bg-[#141824] hover:bg-[#1f2538] border border-neutral-700 text-neutral-300 text-xs font-semibold transition-all flex items-center gap-1.5" onclick="document.getElementById('cloudSyncSettingsPanel').classList.toggle('hidden')">
+            <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 00-9.78 2.096A4.001 4.001 0 003 15z"/></svg>
+            <span>Cloud Database Sync</span>
+          </button>
+
+          <!-- Reset Button -->
+          <button class="p-2 rounded-xl bg-red-950/20 hover:bg-red-900/40 text-red-400 text-xs font-medium border border-red-900/40 ml-auto transition-colors" onclick="App.resetCustomData()" title="Reset all custom added entries">
+            Reset Data
+          </button>
+        </div>
+
+        <!-- Optional Supabase Cloud Sync Settings Drawer -->
+        <div id="cloudSyncSettingsPanel" class="hidden mt-6 p-6 rounded-2xl bg-[#090b10] border border-cyan-500/30 text-xs text-neutral-300 space-y-4">
+          <div class="flex items-center justify-between border-b border-neutral-800 pb-3">
+            <h4 class="font-bold text-cyan-400 text-sm flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              <span>Live Multi-User Cloud Sync (Supabase PostgreSQL)</span>
+            </h4>
+            <span class="text-[11px] text-neutral-500">100% Free Forever</span>
+          </div>
+          <p class="text-neutral-400 leading-relaxed">
+            Want you and your fiancée to share the exact same repository live across multiple phones and computers without sending backup files? Plug in your free Supabase project credentials below:
+          </p>
+
+          <form onsubmit="App.saveCloudConfig(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="supabaseProjectUrl" class="block font-medium text-neutral-300 mb-1">Supabase Project URL:</label>
+              <input id="supabaseProjectUrl" type="url" placeholder="https://xyzcompany.supabase.co" class="w-full bg-[#12141e] border border-neutral-700 rounded-xl px-3.5 py-2 text-white placeholder-neutral-500 text-xs focus:outline-none focus:border-cyan-400">
+            </div>
+            <div>
+              <label for="supabaseAnonKey" class="block font-medium text-neutral-300 mb-1">Supabase Anon Public API Key:</label>
+              <input id="supabaseAnonKey" type="password" placeholder="eyJhbGciOi..." class="w-full bg-[#12141e] border border-neutral-700 rounded-xl px-3.5 py-2 text-white placeholder-neutral-500 text-xs focus:outline-none focus:border-cyan-400">
+            </div>
+            <div class="md:col-span-2 flex items-center justify-between gap-4 pt-2">
+              <span class="text-[11px] text-neutral-500">Leave blank to use browser LocalStorage only.</span>
+              <button type="submit" class="btn-gold text-xs py-2 px-5">
+                Save & Connect Cloud
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Contributor Sub-Tabs Bar -->
+      <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2">
+        <button data-admin-subtab="hadith" class="admin-subtab-btn px-4 py-2 rounded-xl text-xs font-bold bg-[#D4AF37] text-black shadow-lg shadow-[#D4AF37]/20 transition-all" onclick="App.switchAdminSubTab('hadith')">
+          📜 Add Hadith
+        </button>
+        <button data-admin-subtab="dua" class="admin-subtab-btn px-4 py-2 rounded-xl text-xs font-semibold bg-[#12141d] text-neutral-400 hover:text-white border border-neutral-800 transition-all" onclick="App.switchAdminSubTab('dua')">
+          🤲 Add Dua
+        </button>
+        <button data-admin-subtab="quote" class="admin-subtab-btn px-4 py-2 rounded-xl text-xs font-semibold bg-[#12141d] text-neutral-400 hover:text-white border border-neutral-800 transition-all" onclick="App.switchAdminSubTab('quote')">
+          💎 Add Quote
+        </button>
+        <button data-admin-subtab="prophet" class="admin-subtab-btn px-4 py-2 rounded-xl text-xs font-semibold bg-[#12141d] text-neutral-400 hover:text-white border border-neutral-800 transition-all" onclick="App.switchAdminSubTab('prophet')">
+          ✨ Add Prophet Story
+        </button>
+        <button data-admin-subtab="sahabah" class="admin-subtab-btn px-4 py-2 rounded-xl text-xs font-semibold bg-[#12141d] text-neutral-400 hover:text-white border border-neutral-800 transition-all" onclick="App.switchAdminSubTab('sahabah')">
+          ⚔️ Add Sahabah
+        </button>
+        <button data-admin-subtab="quiz" class="admin-subtab-btn px-4 py-2 rounded-xl text-xs font-semibold bg-[#12141d] text-neutral-400 hover:text-white border border-neutral-800 transition-all" onclick="App.switchAdminSubTab('quiz')">
+          🏆 Add Quiz Question
+        </button>
+        <button data-admin-subtab="manage" class="admin-subtab-btn px-4 py-2 rounded-xl text-xs font-semibold bg-[#12141d] text-neutral-400 hover:text-white border border-neutral-800 transition-all" onclick="App.switchAdminSubTab('manage')">
+          📋 Manage & Delete (Curated Items)
+        </button>
+      </div>
+
+      <!-- SUBTAB 1: ADD HADITH -->
+      <div id="admin-subtab-hadith" class="admin-subtab-panel glass-card p-6 md:p-8 border border-[#D4AF37]/30">
+        <h3 class="font-serif text-xl font-bold text-white mb-2 flex items-center gap-2">
+          <span>Add Authentic Prophetic Hadith</span>
+        </h3>
+        <p class="text-xs text-neutral-400 mb-6">Enter Arabic matn, English translation, authentic chain narrator, and source.</p>
+
+        <form onsubmit="App.addCustomHadith(event)" class="space-y-4">
+          <div>
+            <label for="adminHadithArabic" class="block text-xs font-medium text-[#F6E27A] mb-1">Arabic Text (النص العربي): *</label>
+            <textarea id="adminHadithArabic" dir="rtl" rows="3" placeholder="أدخل نص الحديث الشريف بالتشكيل..." required class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-4 py-3 text-right font-arabic text-lg text-[#F6E27A] focus:outline-none leading-relaxed"></textarea>
+          </div>
+
+          <div>
+            <label for="adminHadithTrans" class="block text-xs font-medium text-neutral-300 mb-1">English Translation: *</label>
+            <textarea id="adminHadithTrans" rows="3" placeholder="Enter clear English translation of the Hadith..." required class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none leading-relaxed"></textarea>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <label for="adminHadithNarrator" class="block text-xs font-medium text-neutral-300 mb-1">Narrator:</label>
+              <input id="adminHadithNarrator" type="text" placeholder="e.g. Abu Hurairah (RA)" class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none">
+            </div>
+
+            <div>
+              <label for="adminHadithSource" class="block text-xs font-medium text-neutral-300 mb-1">Source & Number:</label>
+              <input id="adminHadithSource" type="text" placeholder="e.g. Sahih al-Bukhari #6407" class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none">
+            </div>
+
+            <div>
+              <label for="adminHadithGrade" class="block text-xs font-medium text-neutral-300 mb-1">Authenticity Grade:</label>
+              <select id="adminHadithGrade" class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none">
+                <option value="Sahih (Authentic)">Sahih (Authentic)</option>
+                <option value="Muttafaqun 'Alayh (Agreed Upon)">Muttafaqun 'Alayh (Agreed Upon)</option>
+                <option value="Hasan (Good)">Hasan (Good)</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="adminHadithCategory" class="block text-xs font-medium text-neutral-300 mb-1">Category / Theme:</label>
+              <input id="adminHadithCategory" type="text" placeholder="e.g. Good Character" class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none">
+            </div>
+          </div>
+
+          <div>
+            <label for="adminHadithExplanation" class="block text-xs font-medium text-neutral-300 mb-1">Scholarly Insight / Commentary:</label>
+            <input id="adminHadithExplanation" type="text" placeholder="Key lesson and spiritual takeaway from classical scholars..." class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-4 py-2 text-xs text-white focus:outline-none">
+          </div>
+
+          <div class="text-right pt-2">
+            <button type="submit" class="btn-gold text-xs py-2.5 px-6 font-bold shadow-lg shadow-[#D4AF37]/20">
+              Save Hadith to Treasury
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- SUBTAB 2: ADD DUA -->
+      <div id="admin-subtab-dua" class="admin-subtab-panel hidden glass-card p-6 md:p-8 border border-[#D4AF37]/30">
+        <h3 class="font-serif text-xl font-bold text-white mb-2">Add Authentic Dua or Dhikr</h3>
+        <p class="text-xs text-neutral-400 mb-6">Contribute daily supplications with repeat targets and virtues from Hisn al-Muslim.</p>
+
+        <form onsubmit="App.addCustomDua(event)" class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="sm:col-span-2">
+              <label for="adminDuaTitle" class="block text-xs font-medium text-white mb-1">Dua Title: *</label>
+              <input id="adminDuaTitle" type="text" placeholder="e.g. Supplication for Morning Protection & Light" required class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none">
+            </div>
+            <div>
+              <label for="adminDuaCategory" class="block text-xs font-medium text-neutral-300 mb-1">Category:</label>
+              <input id="adminDuaCategory" type="text" placeholder="e.g. Morning & Evening" class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none">
+            </div>
+          </div>
+
+          <div>
+            <label for="adminDuaArabic" class="block text-xs font-medium text-[#F6E27A] mb-1">Arabic Text (النص العربي): *</label>
+            <textarea id="adminDuaArabic" dir="rtl" rows="3" placeholder="أدخل نص الدعاء بالتشكيل..." required class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-4 py-3 text-right font-arabic text-lg text-[#F6E27A] focus:outline-none leading-relaxed"></textarea>
+          </div>
+
+          <div>
+            <label for="adminDuaTranslit" class="block text-xs font-medium text-neutral-400 mb-1">Transliteration (Pronunciation):</label>
+            <input id="adminDuaTranslit" type="text" placeholder="e.g. Allāhumma inni as'aluka..." class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-4 py-2 text-xs text-neutral-300 focus:outline-none italic">
+          </div>
+
+          <div>
+            <label for="adminDuaTrans" class="block text-xs font-medium text-neutral-300 mb-1">English Translation: *</label>
+            <textarea id="adminDuaTrans" rows="2" placeholder="Meaning in English..." required class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none"></textarea>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label for="adminDuaVirtue" class="block text-xs font-medium text-neutral-300 mb-1">Virtue & Reward:</label>
+              <input id="adminDuaVirtue" type="text" placeholder="e.g. Protection against all harm" class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none">
+            </div>
+            <div>
+              <label for="adminDuaSource" class="block text-xs font-medium text-neutral-300 mb-1">Source:</label>
+              <input id="adminDuaSource" type="text" placeholder="e.g. Sunan Abi Dawud #5088" class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none">
+            </div>
+            <div>
+              <label for="adminDuaTarget" class="block text-xs font-medium text-neutral-300 mb-1">Tasbih Target Count:</label>
+              <input id="adminDuaTarget" type="number" min="1" value="3" class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none">
+            </div>
+          </div>
+
+          <div class="text-right pt-2">
+            <button type="submit" class="btn-gold text-xs py-2.5 px-6 font-bold">
+              Save Dua to Treasury
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- SUBTAB 3: ADD QUOTE -->
+      <div id="admin-subtab-quote" class="admin-subtab-panel hidden glass-card p-6 md:p-8 border border-[#D4AF37]/30">
+        <h3 class="font-serif text-xl font-bold text-white mb-2">Add Scholar Quote & Aphorism</h3>
+        <p class="text-xs text-neutral-400 mb-6">Record timeless wisdom from early classical scholars and luminaries.</p>
+
+        <form onsubmit="App.addCustomQuote(event)" class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label for="adminQuoteScholar" class="block text-xs font-medium text-white mb-1">Scholar Name: *</label>
+              <input id="adminQuoteScholar" type="text" placeholder="e.g. Ibn al-Jawzi (رحمه الله)" required class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none">
+            </div>
+            <div>
+              <label for="adminQuoteEra" class="block text-xs font-medium text-neutral-300 mb-1">Era / Years:</label>
+              <input id="adminQuoteEra" type="text" placeholder="e.g. 510 - 597 AH" class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none">
+            </div>
+            <div>
+              <label for="adminQuoteCategory" class="block text-xs font-medium text-neutral-300 mb-1">Category:</label>
+              <input id="adminQuoteCategory" type="text" placeholder="e.g. Heart & Repentance" class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none">
+            </div>
+          </div>
+
+          <div>
+            <label for="adminQuoteText" class="block text-xs font-medium text-neutral-300 mb-1">Quote Text: *</label>
+            <textarea id="adminQuoteText" rows="3" placeholder="Enter quote reflection..." required class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-4 py-3 text-xs text-white focus:outline-none leading-relaxed"></textarea>
+          </div>
+
+          <div class="text-right pt-2">
+            <button type="submit" class="btn-gold text-xs py-2.5 px-6 font-bold">
+              Save Quote
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- SUBTAB 4: ADD PROPHET STORY -->
+      <div id="admin-subtab-prophet" class="admin-subtab-panel hidden glass-card p-6 md:p-8 border border-[#D4AF37]/30">
+        <h3 class="font-serif text-xl font-bold text-white mb-2">Add Prophet Narrative</h3>
+        <p class="text-xs text-neutral-400 mb-6">Document the life, trials, and divine wisdom of Allah's chosen emissaries.</p>
+
+        <form onsubmit="App.addCustomProphet(event)" class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <label for="adminProphetName" class="block text-xs font-medium text-white mb-1">Prophet Name: *</label>
+              <input id="adminProphetName" type="text" placeholder="e.g. Prophet Ayyub (عليه السلام)" required class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none">
+            </div>
+            <div>
+              <label for="adminProphetTitle" class="block text-xs font-medium text-neutral-300 mb-1">Title:</label>
+              <input id="adminProphetTitle" type="text" placeholder="e.g. The Paragon of Patience" class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none">
+            </div>
+            <div>
+              <label for="adminProphetEpithet" class="block text-xs font-medium text-neutral-300 mb-1">Epithet:</label>
+              <input id="adminProphetEpithet" type="text" placeholder="e.g. As-Saboor" class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none">
+            </div>
+            <div>
+              <label for="adminProphetTheme" class="block text-xs font-medium text-neutral-300 mb-1">Core Spiritual Theme:</label>
+              <input id="adminProphetTheme" type="text" placeholder="e.g. Steadfastness through Severe Trials" class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none">
+            </div>
+          </div>
+
+          <div>
+            <label for="adminProphetRef" class="block text-xs font-medium text-neutral-300 mb-1">Qur’anic Reference:</label>
+            <input id="adminProphetRef" type="text" placeholder="e.g. Surah Al-Anbiya 21:83-84, Surah Sad 38:41-44" class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-4 py-2 text-xs text-white focus:outline-none">
+          </div>
+
+          <div>
+            <label for="adminProphetStory" class="block text-xs font-medium text-neutral-300 mb-1">Narrative & Life Lessons: *</label>
+            <textarea id="adminProphetStory" rows="4" placeholder="Chronicle the narrative, trial, and victory..." required class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-4 py-3 text-xs text-white focus:outline-none leading-relaxed"></textarea>
+          </div>
+
+          <div class="text-right pt-2">
+            <button type="submit" class="btn-gold text-xs py-2.5 px-6 font-bold">
+              Save Prophet Story
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- SUBTAB 5: ADD SAHABAH -->
+      <div id="admin-subtab-sahabah" class="admin-subtab-panel hidden glass-card p-6 md:p-8 border border-[#D4AF37]/30">
+        <h3 class="font-serif text-xl font-bold text-white mb-2">Add Sahabah Chronicle</h3>
+        <p class="text-xs text-neutral-400 mb-6">Record virtues, sacrifices, and inspiring biographies of the noble Companions.</p>
+
+        <form onsubmit="App.addCustomSahabah(event)" class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label for="adminSahabahName" class="block text-xs font-medium text-white mb-1">Companion Name: *</label>
+              <input id="adminSahabahName" type="text" placeholder="e.g. Salman al-Farsi (رضي الله عنه)" required class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-4 py-2 text-xs text-white focus:outline-none">
+            </div>
+            <div>
+              <label for="adminSahabahTitle" class="block text-xs font-medium text-neutral-300 mb-1">Title / Honorific:</label>
+              <input id="adminSahabahTitle" type="text" placeholder="e.g. The Seeker of Truth" class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-4 py-2 text-xs text-white focus:outline-none">
+            </div>
+            <div>
+              <label for="adminSahabahVirtue" class="block text-xs font-medium text-neutral-300 mb-1">Core Virtue:</label>
+              <input id="adminSahabahVirtue" type="text" placeholder="e.g. Relentless Quest for Genuine Tawheed" class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-4 py-2 text-xs text-white focus:outline-none">
+            </div>
+          </div>
+
+          <div>
+            <label for="adminSahabahBio" class="block text-xs font-medium text-neutral-300 mb-1">Biography & Sacrifices: *</label>
+            <textarea id="adminSahabahBio" rows="4" placeholder="Enter biography and character details..." required class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-4 py-3 text-xs text-white focus:outline-none leading-relaxed"></textarea>
+          </div>
+
+          <div>
+            <label for="adminSahabahQuote" class="block text-xs font-medium text-neutral-300 mb-1">Inspiring Quote / Saying:</label>
+            <input id="adminSahabahQuote" type="text" placeholder="Memorable saying or last words..." class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-4 py-2 text-xs text-white focus:outline-none italic">
+          </div>
+
+          <div class="text-right pt-2">
+            <button type="submit" class="btn-gold text-xs py-2.5 px-6 font-bold">
+              Save Sahabah Chronicle
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- SUBTAB 6: ADD QUIZ QUESTION -->
+      <div id="admin-subtab-quiz" class="admin-subtab-panel hidden glass-card p-6 md:p-8 border border-[#D4AF37]/30">
+        <h3 class="font-serif text-xl font-bold text-white mb-2">Add Islamic Quiz Question</h3>
+        <p class="text-xs text-neutral-400 mb-6">Create authentic multiple-choice questions with verified citations and explanations.</p>
+
+        <form onsubmit="App.addCustomQuiz(event)" class="space-y-4">
+          <div>
+            <label for="adminQuizQuestion" class="block text-xs font-medium text-white mb-1">Question: *</label>
+            <input id="adminQuizQuestion" type="text" placeholder="e.g. Which Companion suggested digging the trench (Khandaq) to defend Madinah?" required class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none">
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="adminQuizOptA" class="block text-xs font-medium text-neutral-300 mb-1">Option A: *</label>
+              <input id="adminQuizOptA" type="text" placeholder="Option A" required class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none">
+            </div>
+            <div>
+              <label for="adminQuizOptB" class="block text-xs font-medium text-neutral-300 mb-1">Option B: *</label>
+              <input id="adminQuizOptB" type="text" placeholder="Option B" required class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none">
+            </div>
+            <div>
+              <label for="adminQuizOptC" class="block text-xs font-medium text-neutral-300 mb-1">Option C: *</label>
+              <input id="adminQuizOptC" type="text" placeholder="Option C" required class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none">
+            </div>
+            <div>
+              <label for="adminQuizOptD" class="block text-xs font-medium text-neutral-300 mb-1">Option D: *</label>
+              <input id="adminQuizOptD" type="text" placeholder="Option D" required class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label for="adminQuizCorrect" class="block text-xs font-medium text-[#F6E27A] mb-1">Correct Answer: *</label>
+              <select id="adminQuizCorrect" class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none">
+                <option value="0">Option A</option>
+                <option value="1">Option B</option>
+                <option value="2">Option C</option>
+                <option value="3">Option D</option>
+              </select>
+            </div>
+            <div class="sm:col-span-2">
+              <label for="adminQuizReference" class="block text-xs font-medium text-neutral-300 mb-1">Citation Reference:</label>
+              <input id="adminQuizReference" type="text" placeholder="e.g. Seerah Ibn Hisham / Sahih al-Bukhari" class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none">
+            </div>
+          </div>
+
+          <div>
+            <label for="adminQuizExplanation" class="block text-xs font-medium text-neutral-300 mb-1">Explanation shown after answering:</label>
+            <input id="adminQuizExplanation" type="text" placeholder="Brief contextual explanation why this answer is correct..." class="w-full bg-[#0c0d14] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-4 py-2 text-xs text-white focus:outline-none">
+          </div>
+
+          <div class="text-right pt-2">
+            <button type="submit" class="btn-gold text-xs py-2.5 px-6 font-bold">
+              Save Quiz Question
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- SUBTAB 7: MANAGE & DELETE CUSTOM ENTRIES -->
+      <div id="admin-subtab-manage" class="admin-subtab-panel hidden space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#D4AF37]/20 pb-4">
+          <div>
+            <h3 class="font-serif text-xl font-bold text-white">Your Curated Additions</h3>
+            <p class="text-xs text-neutral-400 mt-0.5">Manage, review, or delete entries added by you and your fiancée.</p>
+          </div>
+
+          <!-- Category filter pills -->
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <button data-admin-filter="all" class="admin-filter-pill px-3 py-1 rounded-lg text-xs font-bold bg-[#D4AF37] text-black transition-all" onclick="App.filterAdminCustomList('all')">All</button>
+            <button data-admin-filter="hadiths" class="admin-filter-pill px-3 py-1 rounded-lg text-xs bg-[#151722] text-neutral-400 hover:text-white border border-neutral-800 transition-all" onclick="App.filterAdminCustomList('hadiths')">Hadiths</button>
+            <button data-admin-filter="duas" class="admin-filter-pill px-3 py-1 rounded-lg text-xs bg-[#151722] text-neutral-400 hover:text-white border border-neutral-800 transition-all" onclick="App.filterAdminCustomList('duas')">Duas</button>
+            <button data-admin-filter="scholarQuotes" class="admin-filter-pill px-3 py-1 rounded-lg text-xs bg-[#151722] text-neutral-400 hover:text-white border border-neutral-800 transition-all" onclick="App.filterAdminCustomList('scholarQuotes')">Quotes</button>
+            <button data-admin-filter="prophetStories" class="admin-filter-pill px-3 py-1 rounded-lg text-xs bg-[#151722] text-neutral-400 hover:text-white border border-neutral-800 transition-all" onclick="App.filterAdminCustomList('prophetStories')">Prophets</button>
+            <button data-admin-filter="sahabah" class="admin-filter-pill px-3 py-1 rounded-lg text-xs bg-[#151722] text-neutral-400 hover:text-white border border-neutral-800 transition-all" onclick="App.filterAdminCustomList('sahabah')">Sahabah</button>
+            <button data-admin-filter="quiz" class="admin-filter-pill px-3 py-1 rounded-lg text-xs bg-[#151722] text-neutral-400 hover:text-white border border-neutral-800 transition-all" onclick="App.filterAdminCustomList('quiz')">Quiz</button>
+          </div>
+        </div>
+
+        <!-- Rendered Items List -->
+        <div id="adminCustomEntriesList"></div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ===================================================================== -->
+  <!-- FLOATING PERSISTENT AUDIO RECITATION PLAYER BAR -->
+  <!-- ===================================================================== -->
+  <aside id="audioPlayerBar" class="audio-bar-fixed hidden p-4">
+    <div class="flex items-center justify-between gap-4">
+      
+      <!-- Surah & Reciter Info -->
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-10 h-10 rounded-lg bg-[#D4AF37]/15 border border-[#D4AF37] text-[#D4AF37] flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
+        </div>
+        <div class="truncate">
+          <h4 id="audioSurahTitle" class="text-sm font-bold text-white truncate">Surah Al-Fatihah</h4>
+          <p id="audioAyahInfo" class="text-[11px] text-neutral-400 truncate">Ayah 1 • Mishary Rashid Alafasy</p>
+        </div>
+      </div>
+
+      <!-- Audio Controls -->
+      <div class="flex items-center gap-2">
+        <!-- Prev Ayah -->
+        <button class="p-2 rounded-lg bg-[#181a24] hover:bg-[#252a38] text-neutral-300 hover:text-white transition-all" onclick="App.playPrevAyah()" title="Previous Ayah">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+        </button>
+
+        <!-- Play / Pause Button -->
+        <button id="audioPlayBtn" class="w-10 h-10 rounded-full bg-[#D4AF37] hover:bg-[#F6E27A] text-black flex items-center justify-center shadow-lg shadow-[#D4AF37]/30 transition-transform active:scale-95" onclick="App.toggleAudioPlayback()" title="Play / Pause">
+          <svg class="w-5 h-5 text-black" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+
+        <!-- Next Ayah -->
+        <button class="p-2 rounded-lg bg-[#181a24] hover:bg-[#252a38] text-neutral-300 hover:text-white transition-all" onclick="App.playNextAyah()" title="Next Ayah">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+        </button>
+
+        <!-- Loop Count Button -->
+        <button id="audioLoopBtn" class="px-2.5 py-1.5 rounded-lg bg-[#181a24] hover:bg-[#252a38] border border-neutral-700 text-[11px] text-[#F6E27A] font-mono transition-all" title="Repeat Ayah for Memorisation">
+          1x Loop
+        </button>
+
+        <!-- Close Player -->
+        <button class="p-2 rounded-lg text-neutral-400 hover:text-red-400 transition-colors" onclick="App.closeAudioPlayer()" title="Dismiss Audio Player">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Audio Time Progress Bar -->
+    <div class="w-full bg-neutral-800 h-1 rounded-full mt-3 overflow-hidden">
+      <div id="audioProgressBar" class="bg-gradient-to-r from-[#D4AF37] to-[#F6E27A] h-full w-0 transition-all duration-200"></div>
+    </div>
+  </aside>
+
+  <!-- ===================================================================== -->
+  <!-- GLOBAL SEARCH MODAL -->
+  <!-- ===================================================================== -->
+  <div id="searchModal" class="modal-backdrop fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-24 p-4 hidden">
+    <div class="glass-card w-full max-w-2xl border-2 border-[#D4AF37]/50 shadow-2xl p-6 relative overflow-hidden bg-[#0c0e14]/95">
+      
+      <!-- Header / Search Input -->
+      <div class="relative mb-4">
+        <input id="modalSearchInput" type="text" placeholder="Search Qur'an, Hadith, Duas, Prophets, Sahabah, Scholars..." oninput="App.executeSearch(this.value)" class="w-full pl-11 pr-10 py-3 rounded-xl bg-[#141722] border border-[#D4AF37]/40 focus:border-[#D4AF37] text-white placeholder-neutral-500 focus:outline-none text-sm">
+        <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#D4AF37]">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </div>
+        <button class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white" onclick="App.closeSearchModal()">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Quick Category Hints -->
+      <div class="text-[11px] text-neutral-500 mb-3 flex items-center justify-between">
+        <span>Instant full-text search across all 12 modules</span>
+        <kbd class="px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-400 font-mono text-[10px]">Esc to close</kbd>
+      </div>
+
+      <!-- Results Container -->
+      <div id="searchResultsContainer" class="max-h-[60vh] overflow-y-auto space-y-2 pr-1"></div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- BOOKMARKS MODAL -->
+  <!-- ===================================================================== -->
+  <div id="bookmarksModal" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+    <div class="glass-card w-full max-w-xl border-2 border-[#D4AF37]/50 shadow-2xl p-6 relative overflow-hidden bg-[#0c0e14]/95">
+      <div class="flex items-center justify-between border-b border-neutral-800 pb-4 mb-4">
+        <div class="flex items-center gap-2">
+          <svg class="w-5 h-5 text-[#D4AF37]" fill="currentColor" viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
+          <h3 class="font-serif text-lg font-bold text-white">Saved Islamic Bookmarks</h3>
+        </div>
+        <button class="text-neutral-400 hover:text-white" onclick="App.closeBookmarksModal()">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Bookmarks List -->
+      <div id="bookmarksList" class="max-h-[60vh] overflow-y-auto space-y-3 pr-1"></div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="mirathToast" class="fixed bottom-24 right-6 z-[100] px-5 py-3.5 rounded-2xl backdrop-blur-xl border opacity-0 pointer-events-none transition-all duration-300 transform translate-y-10 text-sm font-semibold"></div>
+
+  <!-- ===================================================================== -->
+  <!-- LUXURY FOOTER -->
+  <!-- ===================================================================== -->
+  <footer class="mt-auto border-t border-[#D4AF37]/20 bg-[#060709] py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+      
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
+        
+        <!-- Column 1: Brand & Sacred Purpose -->
+        <div class="md:col-span-2 space-y-3">
+          <div class="flex items-center gap-3 cursor-pointer" onclick="App.switchTab('home')">
+            <div class="w-9 h-9 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37] flex items-center justify-center">
+              <svg class="w-5 h-5 text-[#D4AF37]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M12 2L14.8 9.2L22 12L14.8 14.8L12 22L9.2 14.8L2 12L9.2 9.2L12 2Z" fill="#D4AF37" fill-opacity="0.25"/>
+                <circle cx="12" cy="12" r="2.5" fill="#D4AF37"/>
+              </svg>
+            </div>
+            <span class="font-serif text-xl font-bold tracking-wider gold-text">MIRATH (ميراث)</span>
+          </div>
+          <p class="text-xs text-neutral-400 max-w-md leading-relaxed">
+            "The scholars are the heirs of the Prophets, and the Prophets did not leave behind dinars or dirhams, but they left behind knowledge; whoever takes it has taken an abundant share." (Sunan Abi Dawud #3641)
+          </p>
+          <div class="text-[11px] text-[#D4AF37] font-arabic">
+            صَدَقَةٌ جَارِيَةٌ لِوَجْهِ اللَّهِ تَعَالَى
+          </div>
+        </div>
+
+        <!-- Column 2: Quick Links -->
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-wider text-[#F6E27A] mb-3">Core Modules</h4>
+          <ul class="space-y-2 text-xs text-neutral-400">
+            <li><button class="hover:text-[#F6E27A] transition-colors" onclick="App.switchTab('quran')">Holy Qur’an & Recitations</button></li>
+            <li><button class="hover:text-[#F6E27A] transition-colors" onclick="App.switchTab('hadith')">Sahih Hadith Treasury</button></li>
+            <li><button class="hover:text-[#F6E27A] transition-colors" onclick="App.switchTab('duas')">Daily Duas & Adhkar</button></li>
+            <li><button class="hover:text-[#F6E27A] transition-colors" onclick="App.switchTab('tasbih')">Digital Tactile Tasbih</button></li>
+            <li><button class="hover:text-[#F6E27A] transition-colors" onclick="App.switchTab('zakat')">Zakat & Nisab Calculator</button></li>
+          </ul>
+        </div>
+
+        <!-- Column 3: Biographies & History -->
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-wider text-[#F6E27A] mb-3">History & Wisdom</h4>
+          <ul class="space-y-2 text-xs text-neutral-400">
+            <li><button class="hover:text-[#F6E27A] transition-colors" onclick="App.switchTab('seerah')">Prophetic Seerah Timeline</button></li>
+            <li><button class="hover:text-[#F6E27A] transition-colors" onclick="App.switchTab('prophets')">Stories of the Prophets</button></li>
+            <li><button class="hover:text-[#F6E27A] transition-colors" onclick="App.switchTab('sahabah')">The Noble Companions</button></li>
+            <li><button class="hover:text-[#F6E27A] transition-colors" onclick="App.switchTab('aqeedah')">6 Pillars of Iman & Fiqh</button></li>
+            <li><button class="hover:text-[#F6E27A] transition-colors" onclick="App.switchTab('quiz')">Interactive Islamic Quiz</button></li>
+          </ul>
+        </div>
+
+      </div>
+
+      <div class="border-t border-neutral-900 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-neutral-500 gap-4">
+        <div>
+          © MIRATH Islamic Knowledge Sanctuary. All sacred texts verified against orthodox sources.
+        </div>
+        <div class="flex items-center gap-4 text-xs text-neutral-400">
+          <span class="text-[#D4AF37]">✦ Gold & Obsidian Aesthetic</span>
+          <span>•</span>
+          <span>Open Knowledge for the Ummah</span>
+        </div>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- Core JavaScript Repositories -->
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
