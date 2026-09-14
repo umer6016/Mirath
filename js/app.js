@@ -26,6 +26,9 @@ document.addEventListener('DOMContentLoaded', () => {
       searchQuery: '',
       adminActiveSubTab: 'hadith',
       adminFilterCategory: 'all',
+      adminUnlocked: localStorage.getItem('mirath_admin_auth') === 'true',
+      adminPasscode: localStorage.getItem('mirath_admin_pin') || 'mirath786',
+      hideStudioFromNav: localStorage.getItem('mirath_hide_studio_nav') === 'true',
       cloudSyncConfig: JSON.parse(localStorage.getItem('mirath_cloud_config') || '{"type":"none","url":"","key":""}'),
       customData: {
         hadiths: [],
@@ -47,6 +50,8 @@ document.addEventListener('DOMContentLoaded', () => {
       this.bindEvents();
       this.renderAll();
       this.calculateZakat();
+      this.updateAdminLockUI();
+      this.applyNavVisibility();
       this.renderAdminCustomList();
       this.updateBookmarkBadge();
       this.setupGlobalKeyboard();
@@ -123,11 +128,30 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
           e.preventDefault();
           this.openSearchModal();
+        } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'a' || e.key === 'A')) {
+          e.preventDefault();
+          this.switchTab('admin');
         } else if (e.key === 'Escape') {
           this.closeSearchModal();
           this.closeBookmarksModal();
         }
       });
+    },
+
+    onLogoClick() {
+      this._logoClicks = (this._logoClicks || 0) + 1;
+      clearTimeout(this._logoClickTimeout);
+      this._logoClickTimeout = setTimeout(() => {
+        this._logoClicks = 0;
+      }, 900);
+
+      if (this._logoClicks >= 3) {
+        this._logoClicks = 0;
+        this.switchTab('admin');
+        this.showToast('Curator Studio unlocked shortcut!');
+      } else if (this._logoClicks === 1) {
+        this.switchTab('home');
+      }
     },
 
     switchTab(tabId) {
@@ -158,7 +182,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (tabId === 'quiz') this.renderQuiz();
       if (tabId === 'zakat') this.calculateZakat();
       if (tabId === 'tasbih') this.updateTasbihUI();
-      if (tabId === 'admin') this.renderAdminCustomList();
+      if (tabId === 'admin') {
+        this.updateAdminLockUI();
+        this.renderAdminCustomList();
+      }
     },
 
     renderAll() {
@@ -1084,6 +1111,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const results = [];
 
+      // Check for Admin / Studio command shortcut
+      if (q.includes('admin') || q.includes('studio') || q.includes('curator') || q === '/admin') {
+        results.push({
+          category: 'Curator Studio',
+          title: 'Curator Sanctuary & Content Editor',
+          snippet: 'Access the restricted contributor studio to add, edit, or curate Hadiths, Duas, and quotes.',
+          action: () => {
+            this.closeSearchModal();
+            this.switchTab('admin');
+          }
+        });
+      }
+
       // 1. Search Quran
       window.MIRATH_DATA.quran.forEach((surah, sIdx) => {
         surah.ayahs.forEach((ayah, aIdx) => {
@@ -1375,6 +1415,139 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     },
 
+    updateAdminLockUI() {
+      const lockScreen = document.getElementById('adminLockScreen');
+      const studioContent = document.getElementById('adminStudioContent');
+      const lockError = document.getElementById('adminLockError');
+      const passInput = document.getElementById('adminPasscodeInput');
+      const hideNavCheckbox = document.getElementById('hideStudioNavCheckbox');
+
+      if (hideNavCheckbox) {
+        hideNavCheckbox.checked = !!this.state.hideStudioFromNav;
+      }
+
+      if (this.state.adminUnlocked) {
+        if (lockScreen) lockScreen.classList.add('hidden');
+        if (studioContent) studioContent.classList.remove('hidden');
+        if (lockError) lockError.classList.add('hidden');
+      } else {
+        if (lockScreen) lockScreen.classList.remove('hidden');
+        if (studioContent) studioContent.classList.add('hidden');
+        if (passInput) passInput.value = '';
+      }
+    },
+
+    submitAdminUnlock(e) {
+      if (e) e.preventDefault();
+      const input = document.getElementById('adminPasscodeInput');
+      const errorMsg = document.getElementById('adminLockError');
+      const entered = input ? input.value.trim() : '';
+
+      if (entered === this.state.adminPasscode) {
+        this.state.adminUnlocked = true;
+        localStorage.setItem('mirath_admin_auth', 'true');
+        if (errorMsg) errorMsg.classList.add('hidden');
+        this.updateAdminLockUI();
+        this.renderAdminCustomList();
+        this.showToast('Curator Studio unlocked! Welcome back.');
+      } else {
+        if (errorMsg) {
+          errorMsg.classList.remove('hidden');
+          errorMsg.innerText = 'Incorrect curator passcode. Access is restricted.';
+        }
+        if (input) {
+          input.value = '';
+          input.focus();
+        }
+        this.showToast('Invalid passcode.', 'error');
+      }
+    },
+
+    lockAdmin() {
+      this.state.adminUnlocked = false;
+      localStorage.removeItem('mirath_admin_auth');
+      this.updateAdminLockUI();
+      this.showToast('Curator Studio locked.');
+    },
+
+    changeAdminPasscode(e) {
+      if (e) e.preventDefault();
+      if (!this.state.adminUnlocked) {
+        this.showToast('Curator access required!', 'error');
+        return;
+      }
+
+      const oldPass = document.getElementById('adminOldPasscode')?.value.trim();
+      const newPass = document.getElementById('adminNewPasscode')?.value.trim();
+      const confirmPass = document.getElementById('adminConfirmPasscode')?.value.trim();
+      const errorContainer = document.getElementById('adminSecurityMsg');
+
+      if (oldPass !== this.state.adminPasscode) {
+        if (errorContainer) {
+          errorContainer.innerHTML = '<span class="text-rose-400">Current passcode is incorrect.</span>';
+        }
+        this.showToast('Current passcode is incorrect.', 'error');
+        return;
+      }
+
+      if (!newPass || newPass.length < 4) {
+        if (errorContainer) {
+          errorContainer.innerHTML = '<span class="text-rose-400">New passcode must be at least 4 characters.</span>';
+        }
+        this.showToast('Passcode must be at least 4 characters.', 'error');
+        return;
+      }
+
+      if (newPass !== confirmPass) {
+        if (errorContainer) {
+          errorContainer.innerHTML = '<span class="text-rose-400">New passcodes do not match.</span>';
+        }
+        this.showToast('New passcodes do not match.', 'error');
+        return;
+      }
+
+      this.state.adminPasscode = newPass;
+      localStorage.setItem('mirath_admin_pin', newPass);
+
+      if (document.getElementById('adminOldPasscode')) document.getElementById('adminOldPasscode').value = '';
+      if (document.getElementById('adminNewPasscode')) document.getElementById('adminNewPasscode').value = '';
+      if (document.getElementById('adminConfirmPasscode')) document.getElementById('adminConfirmPasscode').value = '';
+
+      if (errorContainer) {
+        errorContainer.innerHTML = '<span class="text-emerald-400">Passcode updated successfully! Remember to share it only with your fiancée.</span>';
+      }
+      this.showToast('Curator passcode updated!');
+    },
+
+    toggleStudioNavVisibility() {
+      this.state.hideStudioFromNav = !this.state.hideStudioFromNav;
+      localStorage.setItem('mirath_hide_studio_nav', this.state.hideStudioFromNav ? 'true' : 'false');
+      this.applyNavVisibility();
+      if (this.state.hideStudioFromNav) {
+        this.showToast('Stealth Mode active: Studio hidden from public navigation.');
+      } else {
+        this.showToast('Studio button restored in navigation.');
+      }
+    },
+
+    applyNavVisibility() {
+      const headerBtn = document.getElementById('headerStudioBtn');
+      const navBtn = document.getElementById('navStudioBtn');
+      const hideNavCheckbox = document.getElementById('hideStudioNavCheckbox');
+
+      if (hideNavCheckbox) {
+        hideNavCheckbox.checked = !!this.state.hideStudioFromNav;
+      }
+
+      if (this.state.hideStudioFromNav) {
+        if (headerBtn) headerBtn.classList.add('hidden');
+        if (navBtn) navBtn.classList.add('hidden');
+      } else {
+        if (headerBtn) headerBtn.classList.remove('hidden');
+        if (navBtn) navBtn.classList.remove('hidden');
+      }
+    },
+
     switchAdminSubTab(subTabId) {
       this.state.adminActiveSubTab = subTabId;
       document.querySelectorAll('.admin-subtab-btn').forEach(btn => {
@@ -1412,6 +1585,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     addCustomHadith(e) {
       if (e) e.preventDefault();
+      if (!this.state.adminUnlocked) {
+        this.showToast('Curator access required!', 'error');
+        return;
+      }
       const arabic = document.getElementById('adminHadithArabic')?.value.trim();
       const translation = document.getElementById('adminHadithTrans')?.value.trim();
       const narrator = document.getElementById('adminHadithNarrator')?.value.trim() || 'Narrated by Companion';
@@ -1452,6 +1629,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     addCustomDua(e) {
       if (e) e.preventDefault();
+      if (!this.state.adminUnlocked) {
+        this.showToast('Curator access required!', 'error');
+        return;
+      }
       const title = document.getElementById('adminDuaTitle')?.value.trim();
       const arabic = document.getElementById('adminDuaArabic')?.value.trim();
       const transliteration = document.getElementById('adminDuaTranslit')?.value.trim() || '';
@@ -1496,6 +1677,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     addCustomQuote(e) {
       if (e) e.preventDefault();
+      if (!this.state.adminUnlocked) {
+        this.showToast('Curator access required!', 'error');
+        return;
+      }
       const scholar = document.getElementById('adminQuoteScholar')?.value.trim();
       const era = document.getElementById('adminQuoteEra')?.value.trim() || 'Classical Scholar';
       const category = document.getElementById('adminQuoteCategory')?.value.trim() || 'Heart & Wisdom';
@@ -1529,6 +1714,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     addCustomProphet(e) {
       if (e) e.preventDefault();
+      if (!this.state.adminUnlocked) {
+        this.showToast('Curator access required!', 'error');
+        return;
+      }
       const name = document.getElementById('adminProphetName')?.value.trim();
       const title = document.getElementById('adminProphetTitle')?.value.trim() || name;
       const epithet = document.getElementById('adminProphetEpithet')?.value.trim() || 'Prophet of Allah';
@@ -1566,6 +1755,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     addCustomSahabah(e) {
       if (e) e.preventDefault();
+      if (!this.state.adminUnlocked) {
+        this.showToast('Curator access required!', 'error');
+        return;
+      }
       const name = document.getElementById('adminSahabahName')?.value.trim();
       const title = document.getElementById('adminSahabahTitle')?.value.trim() || 'Noble Companion';
       const virtue = document.getElementById('adminSahabahVirtue')?.value.trim() || 'Devotion & Bravery';
@@ -1602,6 +1795,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     addCustomQuiz(e) {
       if (e) e.preventDefault();
+      if (!this.state.adminUnlocked) {
+        this.showToast('Curator access required!', 'error');
+        return;
+      }
       const question = document.getElementById('adminQuizQuestion')?.value.trim();
       const optA = document.getElementById('adminQuizOptA')?.value.trim();
       const optB = document.getElementById('adminQuizOptB')?.value.trim();
@@ -1643,6 +1840,10 @@ document.addEventListener('DOMContentLoaded', () => {
     },
 
     deleteCustomItem(category, itemId) {
+      if (!this.state.adminUnlocked) {
+        this.showToast('Curator access required!', 'error');
+        return;
+      }
       if (!confirm('Are you sure you want to delete this custom entry?')) return;
 
       if (this.state.customData[category]) {
@@ -1780,6 +1981,11 @@ if (typeof window !== 'undefined') {
     },
 
     importJsonBackup(input) {
+      if (!this.state.adminUnlocked) {
+        this.showToast('Curator access required to import backups!', 'error');
+        if (input) input.value = '';
+        return;
+      }
       if (!input.files || !input.files[0]) return;
       const file = input.files[0];
       const reader = new FileReader();
@@ -1810,6 +2016,10 @@ if (typeof window !== 'undefined') {
     },
 
     resetCustomData() {
+      if (!this.state.adminUnlocked) {
+        this.showToast('Curator access required!', 'error');
+        return;
+      }
       if (!confirm('Warning: This will delete ALL custom entries you and your fiancée added locally. Ensure you have exported a backup first! Proceed?')) return;
       this.state.customData = { hadiths: [], duas: [], scholarQuotes: [], prophetStories: [], sahabah: [], quiz: [] };
       this.saveCustomData();
@@ -1819,6 +2029,10 @@ if (typeof window !== 'undefined') {
 
     saveCloudConfig(e) {
       if (e) e.preventDefault();
+      if (!this.state.adminUnlocked) {
+        this.showToast('Curator access required!', 'error');
+        return;
+      }
       const url = document.getElementById('supabaseProjectUrl')?.value.trim();
       const key = document.getElementById('supabaseAnonKey')?.value.trim();
 

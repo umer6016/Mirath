@@ -64,7 +64,7 @@
       <div class="flex items-center justify-between h-20">
         
         <!-- Brand Logo -->
-        <div class="flex items-center gap-3.5 cursor-pointer" onclick="App.switchTab('home')">
+        <div class="flex items-center gap-3.5 cursor-pointer" onclick="App.onLogoClick()" title="MIRATH (Triple click for Curator Studio)">
           <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-[#221c0e] via-[#12141a] to-[#07080a] border border-[#D4AF37] flex items-center justify-center shadow-lg shadow-[#D4AF37]/15 pulse-glow">
             <svg class="w-6 h-6 text-[#D4AF37]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
               <path d="M12 2L14.8 9.2L22 12L14.8 14.8L12 22L9.2 14.8L2 12L9.2 9.2L12 2Z" fill="#D4AF37" fill-opacity="0.25"/>
@@ -103,7 +103,7 @@
           </button>
 
           <!-- Contributor Studio Button -->
-          <button class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#D4AF37]/20 to-[#AA771C]/20 border border-[#D4AF37] text-[#F6E27A] hover:text-white transition-all shadow-md text-xs font-semibold cursor-pointer" onclick="App.switchTab('admin')" title="Contributor Studio & Editor">
+          <button id="headerStudioBtn" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#D4AF37]/20 to-[#AA771C]/20 border border-[#D4AF37] text-[#F6E27A] hover:text-white transition-all shadow-md text-xs font-semibold cursor-pointer" onclick="App.switchTab('admin')" title="Contributor Studio & Editor">
             <span>✍️</span>
             <span class="hidden sm:inline">Studio</span>
           </button>
@@ -154,7 +154,7 @@
         <button data-tab-target="quiz" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-transparent text-neutral-400 hover:text-neutral-200 hover:border-neutral-700">
           🏆 Islamic Quiz
         </button>
-        <button data-tab-target="admin" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-[#D4AF37]/40 text-[#F6E27A] bg-[#1a160d] hover:border-[#D4AF37]">
+        <button id="navStudioBtn" data-tab-target="admin" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-[#D4AF37]/40 text-[#F6E27A] bg-[#1a160d] hover:border-[#D4AF37]">
           ✍️ Contributor Studio
         </button>
       </nav>
@@ -798,93 +798,220 @@
     <!-- ===================================================================== -->
     <!-- TAB 13: CONTRIBUTOR STUDIO & DATA MANAGEMENT -->
     <!-- ===================================================================== -->
+    <!-- TAB 12: CONTRIBUTOR STUDIO / ADMIN -->
+    <!-- ===================================================================== -->
     <section id="tab-admin" class="tab-content-panel hidden space-y-10">
-      
-      <!-- Studio Header -->
-      <div class="relative p-6 md:p-8 rounded-3xl bg-gradient-to-r from-[#171a24] via-[#0f1118] to-[#07080a] border-2 border-[#D4AF37]/40 shadow-2xl">
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div>
-            <div class="flex items-center gap-2.5 mb-2">
-              <span class="w-3 h-3 rounded-full bg-[#D4AF37] animate-pulse"></span>
-              <span class="text-xs font-bold uppercase tracking-widest text-[#F6E27A]">Personal Repository Curator</span>
+
+      <!-- ===================================================================== -->
+      <!-- 1. CURATOR LOCK SCREEN (Shown to friends & public or when locked) -->
+      <!-- ===================================================================== -->
+      <div id="adminLockScreen" class="max-w-md mx-auto py-12 px-6 rounded-3xl bg-gradient-to-b from-[#141724] via-[#0d0f17] to-[#07080a] border-2 border-[#D4AF37]/40 shadow-2xl text-center space-y-6">
+        <!-- Golden Medallion Lock Icon -->
+        <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-[#D4AF37]/30 to-[#1b170e] border border-[#D4AF37] flex items-center justify-center shadow-lg shadow-[#D4AF37]/20">
+          <svg class="w-8 h-8 text-[#F6E27A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+        </div>
+
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 text-[#F6E27A] text-[11px] font-semibold tracking-wider uppercase mb-2">
+            <span>🔒 Curator Sanctuary</span>
+          </div>
+          <h2 class="font-serif text-2xl sm:text-3xl font-bold text-white mb-2">Curator Access Gate</h2>
+          <p class="text-xs sm:text-sm text-neutral-400 leading-relaxed">
+            The Mirath treasury is freely accessible to read and benefit from. Content creation, editing, and repository management are restricted exclusively to the curators.
+          </p>
+        </div>
+
+        <!-- Passcode Unlock Form -->
+        <form onsubmit="App.submitAdminUnlock(event)" class="space-y-4 pt-2">
+          <div class="relative">
+            <input id="adminPasscodeInput" type="password" placeholder="Enter Curator Passcode..." autocomplete="current-password" class="w-full bg-[#08090f] border border-neutral-700 focus:border-[#D4AF37] rounded-xl px-4 py-3 text-center text-sm text-white placeholder-neutral-500 focus:outline-none tracking-widest transition-all">
+          </div>
+
+          <div id="adminLockError" class="hidden text-xs text-rose-400 font-medium py-2 px-3 rounded-lg bg-rose-950/30 border border-rose-900/40">
+            Incorrect curator passcode. Access is restricted.
+          </div>
+
+          <button type="submit" class="w-full btn-gold py-3 rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg shadow-[#D4AF37]/25 flex items-center justify-center gap-2">
+            <svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/>
+            </svg>
+            <span>Unlock Contributor Studio</span>
+          </button>
+        </form>
+
+        <div class="pt-4 border-t border-neutral-800 text-[11px] text-neutral-500 flex items-center justify-center gap-2">
+          <span>Protected with personal encryption & persistent curator session</span>
+        </div>
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- 2. STUDIO CONTENT (Shown only when unlocked) -->
+      <!-- ===================================================================== -->
+      <div id="adminStudioContent" class="hidden space-y-10">
+        
+        <!-- Studio Header -->
+        <div class="relative p-6 md:p-8 rounded-3xl bg-gradient-to-r from-[#171a24] via-[#0f1118] to-[#07080a] border-2 border-[#D4AF37]/40 shadow-2xl">
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div>
+              <div class="flex items-center gap-2.5 mb-2">
+                <span class="w-3 h-3 rounded-full bg-[#D4AF37] animate-pulse"></span>
+                <span class="text-xs font-bold uppercase tracking-widest text-[#F6E27A]">Personal Repository Curator</span>
+              </div>
+              <h2 class="font-serif text-3xl sm:text-4xl font-bold text-white mb-2">
+                Contributor Studio & Repository Editor
+              </h2>
+              <p class="text-xs sm:text-sm text-neutral-300 max-w-2xl leading-relaxed">
+                Add, curate, or delete Hadiths, Duas, Scholar Quotes, Prophet Stories, Sahabah chronicles, and Quizzes whenever you or your fiancée want. Changes reflect live across the treasury immediately.
+              </p>
             </div>
-            <h2 class="font-serif text-3xl sm:text-4xl font-bold text-white mb-2">
-              Contributor Studio & Repository Editor
-            </h2>
-            <p class="text-xs sm:text-sm text-neutral-300 max-w-2xl leading-relaxed">
-              Add, curate, or delete Hadiths, Duas, Scholar Quotes, Prophet Stories, Sahabah chronicles, and Quizzes whenever you or your fiancée want. Changes reflect live across the treasury immediately.
-            </p>
+
+            <!-- Total Counter Badge -->
+            <div class="flex flex-col items-start lg:items-end gap-2 shrink-0">
+              <span id="adminTotalStatsBadge" class="px-4 py-2 rounded-2xl bg-[#D4AF37]/15 text-[#F6E27A] border border-[#D4AF37]/40 text-xs font-mono font-bold shadow-md">
+                0 Custom Items Curated
+              </span>
+              <span class="text-[11px] text-neutral-400">Stored locally & cloud-sync ready</span>
+            </div>
           </div>
 
-          <!-- Total Counter Badge -->
-          <div class="flex flex-col items-start lg:items-end gap-2 shrink-0">
-            <span id="adminTotalStatsBadge" class="px-4 py-2 rounded-2xl bg-[#D4AF37]/15 text-[#F6E27A] border border-[#D4AF37]/40 text-xs font-mono font-bold shadow-md">
-              0 Custom Items Curated
-            </span>
-            <span class="text-[11px] text-neutral-400">Stored locally & cloud-sync ready</span>
+          <!-- Live Statistics Counter Grid -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 mt-6 pt-6 border-t border-neutral-800">
+            <div class="p-3 rounded-xl bg-[#090b10] border border-neutral-800 text-center">
+              <span id="statCustomHadiths" class="block font-mono text-xl font-bold gold-text">0</span>
+              <span class="text-[10px] uppercase text-neutral-400 font-medium">Hadiths</span>
+            </div>
+            <div class="p-3 rounded-xl bg-[#090b10] border border-neutral-800 text-center">
+              <span id="statCustomDuas" class="block font-mono text-xl font-bold text-emerald-400">0</span>
+              <span class="text-[10px] uppercase text-neutral-400 font-medium">Duas</span>
+            </div>
+            <div class="p-3 rounded-xl bg-[#090b10] border border-neutral-800 text-center">
+              <span id="statCustomQuotes" class="block font-mono text-xl font-bold text-amber-300">0</span>
+              <span class="text-[10px] uppercase text-neutral-400 font-medium">Quotes</span>
+            </div>
+            <div class="p-3 rounded-xl bg-[#090b10] border border-neutral-800 text-center">
+              <span id="statCustomProphets" class="block font-mono text-xl font-bold text-cyan-300">0</span>
+              <span class="text-[10px] uppercase text-neutral-400 font-medium">Prophets</span>
+            </div>
+            <div class="p-3 rounded-xl bg-[#090b10] border border-neutral-800 text-center">
+              <span id="statCustomSahabah" class="block font-mono text-xl font-bold text-indigo-300">0</span>
+              <span class="text-[10px] uppercase text-neutral-400 font-medium">Sahabah</span>
+            </div>
+            <div class="p-3 rounded-xl bg-[#090b10] border border-neutral-800 text-center">
+              <span id="statCustomQuiz" class="block font-mono text-xl font-bold text-rose-300">0</span>
+              <span class="text-[10px] uppercase text-neutral-400 font-medium">Quizzes</span>
+            </div>
           </div>
-        </div>
 
-        <!-- Live Statistics Counter Grid -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 mt-6 pt-6 border-t border-neutral-800">
-          <div class="p-3 rounded-xl bg-[#090b10] border border-neutral-800 text-center">
-            <span id="statCustomHadiths" class="block font-mono text-xl font-bold gold-text">0</span>
-            <span class="text-[10px] uppercase text-neutral-400 font-medium">Hadiths</span>
-          </div>
-          <div class="p-3 rounded-xl bg-[#090b10] border border-neutral-800 text-center">
-            <span id="statCustomDuas" class="block font-mono text-xl font-bold text-emerald-400">0</span>
-            <span class="text-[10px] uppercase text-neutral-400 font-medium">Duas</span>
-          </div>
-          <div class="p-3 rounded-xl bg-[#090b10] border border-neutral-800 text-center">
-            <span id="statCustomQuotes" class="block font-mono text-xl font-bold text-amber-300">0</span>
-            <span class="text-[10px] uppercase text-neutral-400 font-medium">Quotes</span>
-          </div>
-          <div class="p-3 rounded-xl bg-[#090b10] border border-neutral-800 text-center">
-            <span id="statCustomProphets" class="block font-mono text-xl font-bold text-cyan-300">0</span>
-            <span class="text-[10px] uppercase text-neutral-400 font-medium">Prophets</span>
-          </div>
-          <div class="p-3 rounded-xl bg-[#090b10] border border-neutral-800 text-center">
-            <span id="statCustomSahabah" class="block font-mono text-xl font-bold text-indigo-300">0</span>
-            <span class="text-[10px] uppercase text-neutral-400 font-medium">Sahabah</span>
-          </div>
-          <div class="p-3 rounded-xl bg-[#090b10] border border-neutral-800 text-center">
-            <span id="statCustomQuiz" class="block font-mono text-xl font-bold text-rose-300">0</span>
-            <span class="text-[10px] uppercase text-neutral-400 font-medium">Quizzes</span>
-          </div>
-        </div>
+          <!-- Data Action Ribbon -->
+          <div class="flex flex-wrap items-center gap-3 mt-6 pt-6 border-t border-neutral-800/80">
+            <!-- Download Updated data.js -->
+            <button class="btn-gold text-xs py-2 px-3.5 flex items-center gap-1.5 shadow-md" onclick="App.exportUpdatedDataJs()" title="Download an updated data.js file to commit to git or deploy">
+              <svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Download Updated data.js</span>
+            </button>
 
-        <!-- Data Action Ribbon -->
-        <div class="flex flex-wrap items-center gap-3 mt-6 pt-6 border-t border-neutral-800/80">
-          <!-- Download Updated data.js -->
-          <button class="btn-gold text-xs py-2 px-3.5 flex items-center gap-1.5 shadow-md" onclick="App.exportUpdatedDataJs()" title="Download an updated data.js file to commit to git or deploy">
-            <svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-            <span>Download Updated data.js</span>
-          </button>
+            <!-- Export JSON Backup -->
+            <button class="btn-outline-gold text-xs py-2 px-3.5 flex items-center gap-1.5" onclick="App.exportJsonBackup()" title="Download a portable .json backup file">
+              <svg class="w-4 h-4 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+              <span>Export Backup (.json)</span>
+            </button>
 
-          <!-- Export JSON Backup -->
-          <button class="btn-outline-gold text-xs py-2 px-3.5 flex items-center gap-1.5" onclick="App.exportJsonBackup()" title="Download a portable .json backup file">
-            <svg class="w-4 h-4 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
-            <span>Export Backup (.json)</span>
-          </button>
+            <!-- Import JSON Backup -->
+            <label class="btn-outline-gold text-xs py-2 px-3.5 flex items-center gap-1.5 cursor-pointer">
+              <svg class="w-4 h-4 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+              <span>Import Backup</span>
+              <input type="file" accept=".json" class="hidden" onchange="App.importJsonBackup(this)">
+            </label>
 
-          <!-- Import JSON Backup -->
-          <label class="btn-outline-gold text-xs py-2 px-3.5 flex items-center gap-1.5 cursor-pointer">
-            <svg class="w-4 h-4 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-            <span>Import Backup</span>
-            <input type="file" accept=".json" class="hidden" onchange="App.importJsonBackup(this)">
-          </label>
+            <!-- Curator Security & Privacy Drawer Toggle -->
+            <button class="px-3.5 py-2 rounded-xl bg-[#181422] hover:bg-[#251d38] border border-[#D4AF37]/50 text-[#F6E27A] text-xs font-semibold transition-all flex items-center gap-1.5" onclick="document.getElementById('curatorSecurityPanel').classList.toggle('hidden')">
+              <svg class="w-4 h-4 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+              <span>Curator Security</span>
+            </button>
 
-          <!-- Cloud Sync Toggle Button -->
-          <button class="px-3.5 py-2 rounded-xl bg-[#141824] hover:bg-[#1f2538] border border-neutral-700 text-neutral-300 text-xs font-semibold transition-all flex items-center gap-1.5" onclick="document.getElementById('cloudSyncSettingsPanel').classList.toggle('hidden')">
-            <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 00-9.78 2.096A4.001 4.001 0 003 15z"/></svg>
-            <span>Cloud Database Sync</span>
-          </button>
+            <!-- Cloud Sync Toggle Button -->
+            <button class="px-3.5 py-2 rounded-xl bg-[#141824] hover:bg-[#1f2538] border border-neutral-700 text-neutral-300 text-xs font-semibold transition-all flex items-center gap-1.5" onclick="document.getElementById('cloudSyncSettingsPanel').classList.toggle('hidden')">
+              <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 00-9.78 2.096A4.001 4.001 0 003 15z"/></svg>
+              <span>Cloud Database Sync</span>
+            </button>
 
-          <!-- Reset Button -->
-          <button class="p-2 rounded-xl bg-red-950/20 hover:bg-red-900/40 text-red-400 text-xs font-medium border border-red-900/40 ml-auto transition-colors" onclick="App.resetCustomData()" title="Reset all custom added entries">
-            Reset Data
-          </button>
-        </div>
+            <!-- Lock Studio Button -->
+            <button class="px-3.5 py-2 rounded-xl bg-[#1b1c24] hover:bg-[#282b3a] border border-neutral-700 text-neutral-300 hover:text-white text-xs font-semibold transition-all flex items-center gap-1.5" onclick="App.lockAdmin()" title="Lock Studio immediately">
+              <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+              <span>Lock Studio</span>
+            </button>
+
+            <!-- Reset Button -->
+            <button class="p-2 rounded-xl bg-red-950/20 hover:bg-red-900/40 text-red-400 text-xs font-medium border border-red-900/40 ml-auto transition-colors" onclick="App.resetCustomData()" title="Reset all custom added entries">
+              Reset Data
+            </button>
+          </div>
+
+          <!-- Curator Security, Passcode & Privacy Drawer -->
+          <div id="curatorSecurityPanel" class="hidden mt-6 p-6 rounded-2xl bg-[#090b10] border border-[#D4AF37]/40 text-xs text-neutral-300 space-y-6">
+            <div class="flex items-center justify-between border-b border-neutral-800 pb-3">
+              <h4 class="font-bold text-[#F6E27A] text-sm flex items-center gap-2">
+                <svg class="w-4 h-4 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                <span>Curator Security, Access Key & Privacy Controls</span>
+              </h4>
+              <span class="text-[11px] text-neutral-500">Shared exclusively between you and your fiancée</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Change Passcode Form -->
+              <form onsubmit="App.changeAdminPasscode(event)" class="space-y-3 bg-[#0d0f18] p-4 rounded-xl border border-neutral-800">
+                <h5 class="font-bold text-white text-xs">Change Curator Passcode</h5>
+                <p class="text-[11px] text-neutral-400">Update the passcode used to unlock Studio on your devices.</p>
+                
+                <div>
+                  <label for="adminOldPasscode" class="block font-medium text-neutral-400 text-[11px] mb-1">Current Passcode:</label>
+                  <input id="adminOldPasscode" type="password" placeholder="Default is mirath786" class="w-full bg-[#12141e] border border-neutral-700 rounded-xl px-3 py-2 text-white placeholder-neutral-500 text-xs focus:outline-none focus:border-[#D4AF37]">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div>
+                    <label for="adminNewPasscode" class="block font-medium text-neutral-400 text-[11px] mb-1">New Passcode:</label>
+                    <input id="adminNewPasscode" type="password" placeholder="Min 4 characters" class="w-full bg-[#12141e] border border-neutral-700 rounded-xl px-3 py-2 text-white placeholder-neutral-500 text-xs focus:outline-none focus:border-[#D4AF37]">
+                  </div>
+                  <div>
+                    <label for="adminConfirmPasscode" class="block font-medium text-neutral-400 text-[11px] mb-1">Confirm New Passcode:</label>
+                    <input id="adminConfirmPasscode" type="password" placeholder="Repeat passcode" class="w-full bg-[#12141e] border border-neutral-700 rounded-xl px-3 py-2 text-white placeholder-neutral-500 text-xs focus:outline-none focus:border-[#D4AF37]">
+                  </div>
+                </div>
+
+                <div id="adminSecurityMsg" class="text-[11px]"></div>
+
+                <button type="submit" class="btn-gold text-xs py-2 px-4 w-full">
+                  Update Passcode
+                </button>
+              </form>
+
+              <!-- Stealth Mode Privacy Toggle -->
+              <div class="bg-[#0d0f18] p-4 rounded-xl border border-neutral-800 space-y-4 flex flex-col justify-between">
+                <div>
+                  <h5 class="font-bold text-white text-xs mb-1">Stealth Mode (Privacy for Friends)</h5>
+                  <p class="text-[11px] text-neutral-400 leading-relaxed">
+                    Turn this on when sharing the site with her friends! It completely removes the "Studio" button from public navigation so visitors never see any admin dashboard.
+                  </p>
+                  <div class="mt-4 p-3 rounded-lg bg-[#08090f] border border-neutral-800 flex items-center gap-3">
+                    <input id="hideStudioNavCheckbox" type="checkbox" onchange="App.toggleStudioNavVisibility()" class="w-4 h-4 rounded text-[#D4AF37] focus:ring-[#D4AF37] bg-neutral-900 border-neutral-700 cursor-pointer">
+                    <label for="hideStudioNavCheckbox" class="text-xs text-[#F6E27A] font-semibold cursor-pointer select-none">
+                      Hide "Studio" button from public navigation
+                    </label>
+                  </div>
+                </div>
+
+                <div class="p-3 rounded-lg bg-[#141824]/60 border border-neutral-800 text-[11px] text-neutral-400 space-y-1">
+                  <span class="font-semibold text-white block">How you both access Studio in Stealth Mode:</span>
+                  <p>1. Press <kbd class="px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-200 border border-neutral-700">Ctrl + Shift + A</kbd> anywhere.</p>
+                  <p>2. Triple-click the <strong>MIRATH</strong> logo in the top left.</p>
+                  <p>3. Type <kbd class="px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-200 border border-neutral-700">/admin</kbd> in Universal Search (<kbd class="px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-200 border border-neutral-700">Ctrl + K</kbd>).</p>
+                </div>
+              </div>
+            </div>
+          </div>
 
         <!-- Optional Supabase Cloud Sync Settings Drawer -->
         <div id="cloudSyncSettingsPanel" class="hidden mt-6 p-6 rounded-2xl bg-[#090b10] border border-cyan-500/30 text-xs text-neutral-300 space-y-4">
@@ -1253,6 +1380,8 @@
         <!-- Rendered Items List -->
         <div id="adminCustomEntriesList"></div>
       </div>
+
+      </div> <!-- End #adminStudioContent -->
 
     </section>
 

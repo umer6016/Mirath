@@ -58,11 +58,22 @@ Mirath is a modern, high-performance static web application requiring zero build
 
 ---
 
-## ✍️ How You & Your Fiancée Can Add / Delete Content
+## ✍️ How You & Your Fiancée Can Add / Delete Content (Curator Sanctuary)
 
-We built a dedicated **Contributor Studio** right inside the website:
+We built a dedicated **Contributor Studio & Curator Sanctuary** right inside the website with **Passcode Security Gate & Stealth Mode** so that friends can view the site freely while only you and your fiancée can make changes:
 
-1. Click the **`✍️ Studio`** button in the top navbar (or navigate to the **✍️ Contributor Studio** tab).
+### 🔒 Curator Security Gate & Permissions:
+- **Protected Access**: Only curators who know the passcode can access the editing studio, add content, or delete entries. Unauthenticated friends and visitors only see the lock screen.
+- **Default Curator Passcode**: `mirath786`
+- **Changing the Passcode**: Inside Studio, click **Curator Security**, enter your current passcode and choose a new private passcode.
+- **Persistent Login**: Once unlocked on your and your fiancée's devices (phone or laptop), `localStorage` remembers the session so you don't need to retype the passcode every visit.
+- **Stealth Mode (Optional)**: In Studio → **Curator Security**, enable *"Hide Studio button from public navigation"*. The button will vanish from the header and navigation bar for all public visitors! You and your fiancée can still access it anytime via:
+  1. Pressing <kbd>Ctrl + Shift + A</kbd> (or <kbd>Cmd + Shift + A</kbd> on Mac).
+  2. Triple-clicking the **MIRATH** logo in the top-left corner.
+  3. Typing `/admin` or `studio` in Universal Search (<kbd>Ctrl + K</kbd>).
+
+### How to Add or Delete Items:
+1. Access the Studio and unlock with your passcode.
 2. Choose what you want to add:
    - **📜 Add Hadith**
    - **🤲 Add Dua**
