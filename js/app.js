@@ -41,6 +41,13 @@ document.addEventListener('DOMContentLoaded', () => {
         prophetStories: [],
         sahabah: [],
         quiz: []
+      },
+      detailModalState: {
+        isOpen: false,
+        type: null,
+        id: null,
+        index: 0,
+        items: []
       }
     },
 
@@ -76,6 +83,13 @@ document.addEventListener('DOMContentLoaded', () => {
         bookmarksModal: document.getElementById('bookmarksModal'),
         bookmarksList: document.getElementById('bookmarksList'),
         bookmarkBadge: document.getElementById('bookmarkCountBadge'),
+        cardDetailModal: document.getElementById('cardDetailModal'),
+        cardDetailBadges: document.getElementById('cardDetailBadges'),
+        cardDetailContent: document.getElementById('cardDetailContent'),
+        cardDetailFooter: document.getElementById('cardDetailFooter'),
+        cardDetailPrevBtn: document.getElementById('cardDetailPrevBtn'),
+        cardDetailNextBtn: document.getElementById('cardDetailNextBtn'),
+        cardDetailBookmarkBtn: document.getElementById('cardDetailBookmarkBtn'),
         audioBar: document.getElementById('audioPlayerBar'),
         audioPlayBtn: document.getElementById('audioPlayBtn'),
         audioSurahTitle: document.getElementById('audioSurahTitle'),
@@ -124,6 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
       window.addEventListener('click', (e) => {
         if (e.target === this.elements.searchModal) this.closeSearchModal();
         if (e.target === this.elements.bookmarksModal) this.closeBookmarksModal();
+        if (e.target === this.elements.cardDetailModal) this.closeCardDetailModal();
       });
     },
 
@@ -142,6 +157,15 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (e.key === 'Escape') {
           this.closeSearchModal();
           this.closeBookmarksModal();
+          this.closeCardDetailModal();
+        } else if (e.key === 'ArrowLeft') {
+          if (this.state.detailModalState && this.state.detailModalState.isOpen) {
+            this.navigateCardDetail(-1);
+          }
+        } else if (e.key === 'ArrowRight') {
+          if (this.state.detailModalState && this.state.detailModalState.isOpen) {
+            this.navigateCardDetail(1);
+          }
         }
       });
     },
@@ -822,7 +846,10 @@ document.addEventListener('DOMContentLoaded', () => {
       container.innerHTML = filtered.map(h => {
         const isBookmarked = this.isBookmarked('hadith', h.id);
         return `
-          <div class="glass-card p-6 border border-[#D4AF37]/20 flex flex-col justify-between">
+          <div 
+            class="glass-card interactive-card p-6 border border-[#D4AF37]/20 flex flex-col justify-between group"
+            onclick="App.openCardDetail('hadith', '${h.id}')"
+          >
             <div>
               <div class="flex items-center justify-between gap-3 border-b border-neutral-800 pb-3 mb-4">
                 <span class="text-xs px-2.5 py-1 rounded bg-[#D4AF37]/15 text-[#F6E27A] border border-[#D4AF37]/30 font-medium">${h.category}</span>
@@ -830,7 +857,7 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
 
               <!-- Arabic text -->
-              <p class="font-arabic text-xl md:text-2xl text-right text-[#F6E27A] mb-4 leading-loose">
+              <p class="font-arabic text-xl md:text-2xl text-right text-[#F6E27A] mb-4 leading-loose group-hover:text-white transition-colors">
                 ${h.arabic}
               </p>
 
@@ -846,16 +873,19 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
 
             <div class="pt-4 border-t border-neutral-800 flex items-center justify-between text-xs text-neutral-400">
-              <div>
-                <p class="font-medium text-neutral-300">${h.narrator}</p>
-                <p class="text-[11px] text-neutral-500">${h.source}</p>
+              <div class="truncate max-w-[140px] sm:max-w-[200px]">
+                <p class="font-medium text-neutral-300 truncate">${h.narrator}</p>
+                <p class="text-[11px] text-neutral-500 truncate">${h.source}</p>
               </div>
 
               <div class="flex items-center gap-2">
-                <button class="p-2 rounded-lg bg-[#161822] hover:bg-[#D4AF37]/20 text-neutral-300 hover:text-white transition-all" title="Copy Hadith" onclick="App.copyText('${h.arabic.replace(/'/g, "\\'")} - ${h.translation.replace(/'/g, "\\'")}')">
+                <span class="text-[11px] text-[#D4AF37] opacity-80 group-hover:opacity-100 flex items-center gap-1 font-medium mr-1 card-click-hint">
+                  Deep Dive →
+                </span>
+                <button class="p-2 rounded-lg bg-[#161822] hover:bg-[#D4AF37]/20 text-neutral-300 hover:text-white transition-all" title="Copy Hadith" onclick="event.stopPropagation(); App.copyText('${h.arabic.replace(/'/g, "\\'")} - ${h.translation.replace(/'/g, "\\'")}')">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                 </button>
-                <button class="p-2 rounded-lg bg-[#161822] hover:bg-[#D4AF37]/20 ${isBookmarked ? 'text-[#D4AF37]' : 'text-neutral-400'} transition-all" title="Bookmark Hadith" onclick="App.toggleBookmark('hadith', '${h.id}', '${h.category} (${h.source})', '${h.translation.replace(/'/g, "\\'")}')">
+                <button class="p-2 rounded-lg bg-[#161822] hover:bg-[#D4AF37]/20 ${isBookmarked ? 'text-[#D4AF37]' : 'text-neutral-400'} transition-all" title="Bookmark Hadith" onclick="event.stopPropagation(); App.toggleBookmark('hadith', '${h.id}', '${h.category} (${h.source})', '${h.translation.replace(/'/g, "\\'")}')">
                   <svg class="w-4 h-4" fill="${isBookmarked ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
                 </button>
               </div>
@@ -885,17 +915,20 @@ document.addEventListener('DOMContentLoaded', () => {
       container.innerHTML = window.MIRATH_DATA.duas.map(d => {
         const isBookmarked = this.isBookmarked('dua', d.id);
         return `
-          <div class="glass-card p-6 border border-[#D4AF37]/20 flex flex-col justify-between">
+          <div 
+            class="glass-card interactive-card p-6 border border-[#D4AF37]/20 flex flex-col justify-between group"
+            onclick="App.openCardDetail('dua', '${d.id}')"
+          >
             <div>
               <div class="flex items-center justify-between gap-3 border-b border-neutral-800 pb-3 mb-4">
                 <span class="text-xs px-2.5 py-1 rounded bg-[#D4AF37]/15 text-[#F6E27A] border border-[#D4AF37]/30 font-medium">${d.category}</span>
                 <span class="text-xs px-2 py-0.5 rounded bg-neutral-800 text-neutral-300 font-mono">Repeat: ${d.targetCount}x</span>
               </div>
 
-              <h3 class="text-base font-bold text-white mb-3">${d.title}</h3>
+              <h3 class="text-base font-bold text-white mb-3 group-hover:text-[#F6E27A] transition-colors">${d.title}</h3>
 
               <!-- Arabic -->
-              <p class="font-arabic text-xl md:text-2xl text-right text-[#F6E27A] mb-3 leading-loose">
+              <p class="font-arabic text-xl md:text-2xl text-right text-[#F6E27A] mb-3 leading-loose group-hover:text-white transition-colors">
                 ${d.arabic}
               </p>
 
@@ -912,13 +945,16 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
 
             <div class="pt-4 border-t border-neutral-800 flex items-center justify-between text-xs text-neutral-400">
-              <span>Source: ${d.source}</span>
+              <span class="truncate max-w-[130px] sm:max-w-[180px]">Source: ${d.source}</span>
               <div class="flex items-center gap-2">
-                <button class="px-3 py-1.5 rounded-lg bg-[#D4AF37]/15 hover:bg-[#D4AF37]/30 text-[#F6E27A] border border-[#D4AF37]/30 flex items-center gap-1.5" onclick="App.setTasbihDua('${d.arabic.replace(/'/g, "\\'")}', '${d.title.replace(/'/g, "\\'")}', ${d.targetCount})">
+                <span class="text-[11px] text-[#D4AF37] opacity-80 group-hover:opacity-100 flex items-center gap-1 font-medium mr-1 card-click-hint">
+                  Deep Dive →
+                </span>
+                <button class="px-3 py-1.5 rounded-lg bg-[#D4AF37]/15 hover:bg-[#D4AF37]/30 text-[#F6E27A] border border-[#D4AF37]/30 flex items-center gap-1.5 transition-all" onclick="event.stopPropagation(); App.setTasbihDua('${d.arabic.replace(/'/g, "\\'")}', '${d.title.replace(/'/g, "\\'")}', ${d.targetCount})">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                   Counter
                 </button>
-                <button class="p-2 rounded-lg bg-[#161822] hover:bg-[#D4AF37]/20 ${isBookmarked ? 'text-[#D4AF37]' : 'text-neutral-400'} transition-all" title="Bookmark Dua" onclick="App.toggleBookmark('dua', '${d.id}', '${d.title}', '${d.translation.replace(/'/g, "\\'")}')">
+                <button class="p-2 rounded-lg bg-[#161822] hover:bg-[#D4AF37]/20 ${isBookmarked ? 'text-[#D4AF37]' : 'text-neutral-400'} transition-all" title="Bookmark Dua" onclick="event.stopPropagation(); App.toggleBookmark('dua', '${d.id}', '${d.title}', '${d.translation.replace(/'/g, "\\'")}')">
                   <svg class="w-4 h-4" fill="${isBookmarked ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
                 </button>
               </div>
@@ -1224,7 +1260,10 @@ document.addEventListener('DOMContentLoaded', () => {
       container.innerHTML = window.MIRATH_DATA.seerahTimeline.map((item, idx) => `
         <div class="relative pl-8 pb-10 border-l-2 border-[#D4AF37]/30 last:border-l-0">
           <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-[#D4AF37] border-4 border-[#07080a] shadow-lg shadow-[#D4AF37]/40"></div>
-          <div class="glass-card p-6 border border-[#D4AF37]/20">
+          <div 
+            class="glass-card interactive-card p-6 border border-[#D4AF37]/20 group cursor-pointer"
+            onclick="App.openCardDetail('seerah', ${idx})"
+          >
             <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
               <span class="text-xs font-bold px-2.5 py-1 rounded bg-[#D4AF37]/20 text-[#F6E27A] border border-[#D4AF37]/30">${item.year}</span>
               <span class="text-xs text-neutral-400 flex items-center gap-1">
@@ -1232,10 +1271,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 ${item.location}
               </span>
             </div>
-            <h3 class="text-lg font-bold text-white mb-2">${item.title}</h3>
+            <h3 class="text-lg font-bold text-white mb-2 group-hover:text-[#F6E27A] transition-colors">${item.title}</h3>
             <p class="text-neutral-300 text-sm leading-relaxed mb-3">${item.description}</p>
-            <div class="p-3 bg-[#0a0b10] rounded-lg border border-neutral-800 text-xs text-neutral-400">
-              <span class="text-[#D4AF37] font-semibold">Eternal Significance:</span> ${item.significance}
+            <div class="p-3 bg-[#0a0b10] rounded-lg border border-neutral-800 text-xs text-neutral-400 flex items-center justify-between gap-2">
+              <div><span class="text-[#D4AF37] font-semibold">Eternal Significance:</span> ${item.significance}</div>
+              <span class="text-[#D4AF37] font-semibold shrink-0 group-hover:translate-x-1 transition-transform">Read More →</span>
             </div>
           </div>
         </div>
@@ -1247,18 +1287,24 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!container || !window.MIRATH_DATA) return;
 
       container.innerHTML = window.MIRATH_DATA.prophetStories.map(p => `
-        <div class="glass-card p-6 border border-[#D4AF37]/20 flex flex-col justify-between">
+        <div 
+          class="glass-card interactive-card p-6 border border-[#D4AF37]/20 flex flex-col justify-between group cursor-pointer"
+          onclick="App.openCardDetail('prophet', '${p.name.replace(/'/g, "\\'")}')"
+        >
           <div>
             <div class="flex items-center justify-between gap-3 border-b border-neutral-800 pb-3 mb-3">
               <span class="text-xs px-2.5 py-1 rounded bg-[#D4AF37]/15 text-[#F6E27A] border border-[#D4AF37]/30">${p.epithet}</span>
               <span class="text-xs text-[#D4AF37] font-medium">${p.keyTheme}</span>
             </div>
-            <h3 class="text-lg font-bold text-white mb-1">${p.name}</h3>
+            <h3 class="text-lg font-bold text-white mb-1 group-hover:text-[#F6E27A] transition-colors">${p.name}</h3>
             <p class="text-xs text-neutral-400 mb-3">${p.title}</p>
-            <p class="text-neutral-300 text-sm leading-relaxed mb-4">${p.story}</p>
+            <p class="text-neutral-300 text-sm leading-relaxed mb-4 line-clamp-4">${p.story}</p>
           </div>
-          <div class="pt-3 border-t border-neutral-800 text-xs text-neutral-500">
-            <span class="text-neutral-400 font-medium">Qur'anic Source:</span> ${p.quranReference}
+          <div class="pt-3 border-t border-neutral-800 flex items-center justify-between text-xs text-neutral-500">
+            <span class="text-neutral-400 font-medium truncate max-w-[170px] sm:max-w-[210px]">Source: ${p.quranReference}</span>
+            <span class="text-[#D4AF37] font-semibold group-hover:translate-x-1 transition-transform flex items-center gap-1">
+              Explore Story →
+            </span>
           </div>
         </div>
       `).join('');
@@ -1269,17 +1315,29 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!container || !window.MIRATH_DATA) return;
 
       container.innerHTML = window.MIRATH_DATA.sahabah.map(s => `
-        <div class="glass-card p-6 border border-[#D4AF37]/20 flex flex-col justify-between">
+        <div 
+          class="glass-card interactive-card p-6 border border-[#D4AF37]/20 flex flex-col justify-between group cursor-pointer"
+          onclick="App.openCardDetail('sahabah', '${s.name.replace(/'/g, "\\'")}')"
+        >
           <div>
-            <div class="border-b border-neutral-800 pb-3 mb-3">
+            <div class="border-b border-neutral-800 pb-3 mb-3 flex items-center justify-between">
               <span class="text-xs px-2.5 py-1 rounded bg-[#D4AF37]/15 text-[#F6E27A] border border-[#D4AF37]/30">${s.title}</span>
+              <span class="text-[11px] text-[#D4AF37] font-serif">رضي الله عنه</span>
             </div>
-            <h3 class="text-lg font-bold text-white mb-2">${s.name}</h3>
+            <h3 class="text-lg font-bold text-white mb-2 group-hover:text-[#F6E27A] transition-colors">${s.name}</h3>
             <p class="text-xs text-[#D4AF37] font-medium mb-3">${s.virtue}</p>
-            <p class="text-neutral-300 text-sm leading-relaxed mb-4">${s.bio}</p>
+            <p class="text-neutral-300 text-sm leading-relaxed mb-4 line-clamp-4">${s.bio}</p>
           </div>
-          <div class="p-3 bg-[#0a0b10] rounded-lg border border-neutral-800 text-xs text-neutral-400 italic">
-            "${s.quote}"
+          <div>
+            <div class="p-3 bg-[#0a0b10] rounded-lg border border-neutral-800 text-xs text-neutral-400 italic mb-3">
+              "${s.quote}"
+            </div>
+            <div class="pt-2 border-t border-neutral-800/60 flex items-center justify-between text-xs text-neutral-500">
+              <span class="text-neutral-400">Chronicle</span>
+              <span class="text-[#D4AF37] font-semibold group-hover:translate-x-1 transition-transform flex items-center gap-1">
+                View Profile →
+              </span>
+            </div>
           </div>
         </div>
       `).join('');
@@ -1294,25 +1352,40 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!container || !window.MIRATH_DATA) return;
 
       container.innerHTML = window.MIRATH_DATA.aqeedahPillars.map((a, idx) => `
-        <div class="glass-card p-5 border border-[#D4AF37]/20">
-          <div class="flex items-center justify-between mb-3">
-            <span class="w-7 h-7 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-[#F6E27A] font-bold text-xs flex items-center justify-center">
-              ${idx + 1}
-            </span>
-            <span class="font-arabic text-lg text-[#F6E27A]">${a.arabic}</span>
+        <div 
+          class="glass-card interactive-card p-5 border border-[#D4AF37]/20 cursor-pointer group flex flex-col justify-between"
+          onclick="App.openCardDetail('aqeedah', ${idx})"
+        >
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="w-7 h-7 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-[#F6E27A] font-bold text-xs flex items-center justify-center">
+                ${idx + 1}
+              </span>
+              <span class="font-arabic text-lg text-[#F6E27A] group-hover:text-white transition-colors">${a.arabic}</span>
+            </div>
+            <h4 class="text-base font-bold text-white mb-2 group-hover:text-[#F6E27A] transition-colors">${a.pillar}</h4>
+            <p class="text-neutral-300 text-xs md:text-sm leading-relaxed mb-3">${a.details}</p>
           </div>
-          <h4 class="text-base font-bold text-white mb-2">${a.pillar}</h4>
-          <p class="text-neutral-300 text-xs md:text-sm leading-relaxed">${a.details}</p>
+          <div class="pt-2 border-t border-neutral-800/60 flex items-center justify-between text-xs text-[#D4AF37]">
+            <span class="text-neutral-500 text-[11px]">Pillar of Faith</span>
+            <span class="group-hover:translate-x-1 transition-transform font-medium">Deep Dive →</span>
+          </div>
         </div>
       `).join('');
 
       if (fiqhContainer) {
-        fiqhContainer.innerHTML = window.MIRATH_DATA.fiqhGuides.map(g => `
-          <div class="glass-card p-6 border border-[#D4AF37]/20">
-            <h4 class="text-lg font-bold text-[#F6E27A] mb-4 flex items-center gap-2">
-              <svg class="w-5 h-5 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-              ${g.title}
-            </h4>
+        fiqhContainer.innerHTML = window.MIRATH_DATA.fiqhGuides.map((g, idx) => `
+          <div 
+            class="glass-card interactive-card p-6 border border-[#D4AF37]/20 cursor-pointer group"
+            onclick="App.openCardDetail('fiqh', ${idx})"
+          >
+            <div class="flex items-center justify-between mb-4">
+              <h4 class="text-lg font-bold text-[#F6E27A] flex items-center gap-2 group-hover:text-white transition-colors">
+                <svg class="w-5 h-5 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                ${g.title}
+              </h4>
+              <span class="text-xs text-[#D4AF37] font-semibold group-hover:translate-x-1 transition-transform">View Full Guide →</span>
+            </div>
             <div class="space-y-2">
               ${g.steps.map(s => `
                 <div class="text-xs md:text-sm text-neutral-300 p-2.5 rounded bg-[#0c0d12] border border-neutral-800/80">
@@ -1374,13 +1447,16 @@ document.addEventListener('DOMContentLoaded', () => {
       container.innerHTML = window.MIRATH_DATA.scholarQuotes.map(q => {
         const isBookmarked = this.isBookmarked('quote', q.scholar);
         return `
-          <div class="glass-card p-6 border border-[#D4AF37]/20 flex flex-col justify-between">
+          <div 
+            class="glass-card interactive-card p-6 border border-[#D4AF37]/20 flex flex-col justify-between group cursor-pointer"
+            onclick="App.openCardDetail('quote', '${q.scholar.replace(/'/g, "\\'")}')"
+          >
             <div>
               <div class="flex items-center justify-between border-b border-neutral-800 pb-3 mb-4">
                 <span class="text-xs px-2.5 py-1 rounded bg-[#D4AF37]/15 text-[#F6E27A] border border-[#D4AF37]/30">${q.category}</span>
                 <span class="text-[11px] text-neutral-500 font-mono">${q.era}</span>
               </div>
-              <blockquote class="text-base md:text-lg text-neutral-100 font-serif italic mb-6 leading-relaxed">
+              <blockquote class="text-base md:text-lg text-neutral-100 font-serif italic mb-6 leading-relaxed group-hover:text-[#F6E27A] transition-colors">
                 "${q.quote}"
               </blockquote>
             </div>
@@ -1390,10 +1466,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 <h5 class="text-sm font-bold text-[#F6E27A]">${q.scholar}</h5>
               </div>
               <div class="flex items-center gap-2">
-                <button class="p-2 rounded-lg bg-[#161822] hover:bg-[#D4AF37]/20 text-neutral-300 hover:text-white transition-all" title="Copy Quote" onclick="App.copyText('${q.quote.replace(/'/g, "\\'")} — ${q.scholar.replace(/'/g, "\\'")}')">
+                <span class="text-[11px] text-[#D4AF37] opacity-80 group-hover:opacity-100 flex items-center gap-1 font-medium mr-1 card-click-hint">
+                  Wisdom →
+                </span>
+                <button class="p-2 rounded-lg bg-[#161822] hover:bg-[#D4AF37]/20 text-neutral-300 hover:text-white transition-all" title="Copy Quote" onclick="event.stopPropagation(); App.copyText('${q.quote.replace(/'/g, "\\'")} — ${q.scholar.replace(/'/g, "\\'")}')">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                 </button>
-                <button class="p-2 rounded-lg bg-[#161822] hover:bg-[#D4AF37]/20 ${isBookmarked ? 'text-[#D4AF37]' : 'text-neutral-400'} transition-all" title="Bookmark Quote" onclick="App.toggleBookmark('quote', '${q.scholar}', '${q.scholar}', '${q.quote.replace(/'/g, "\\'")}')">
+                <button class="p-2 rounded-lg bg-[#161822] hover:bg-[#D4AF37]/20 ${isBookmarked ? 'text-[#D4AF37]' : 'text-neutral-400'} transition-all" title="Bookmark Quote" onclick="event.stopPropagation(); App.toggleBookmark('quote', '${q.scholar}', '${q.scholar}', '${q.quote.replace(/'/g, "\\'")}')">
                   <svg class="w-4 h-4" fill="${isBookmarked ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
                 </button>
               </div>
@@ -1575,17 +1654,20 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       this.elements.bookmarksList.innerHTML = this.state.bookmarks.map(b => `
-        <div class="p-4 rounded-xl bg-[#0c0e14] border border-neutral-800 hover:border-[#D4AF37]/40 transition-all flex items-start justify-between gap-4">
+        <div 
+          class="p-4 rounded-xl bg-[#0c0e14] border border-neutral-800 hover:border-[#D4AF37]/50 transition-all flex items-start justify-between gap-4 cursor-pointer group"
+          onclick="App.onBookmarkClick('${b.type}', '${b.id}')"
+        >
           <div>
             <div class="flex items-center gap-2 mb-1">
               <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-[#D4AF37]/20 text-[#F6E27A] border border-[#D4AF37]/30">${b.type}</span>
-              <h5 class="text-sm font-bold text-white">${b.title}</h5>
+              <h5 class="text-sm font-bold text-white group-hover:text-[#F6E27A] transition-colors">${b.title}</h5>
             </div>
             <p class="text-xs text-neutral-300 italic mb-1">"${b.snippet}..."</p>
-            <span class="text-[10px] text-neutral-500">Saved: ${b.timestamp}</span>
+            <span class="text-[10px] text-neutral-500">Saved: ${b.timestamp} • Click to read</span>
           </div>
 
-          <button class="text-neutral-500 hover:text-red-400 p-1.5 transition-colors" title="Remove Bookmark" onclick="App.removeBookmark('${b.type}', '${b.id}')">
+          <button class="text-neutral-500 hover:text-red-400 p-1.5 transition-colors" title="Remove Bookmark" onclick="event.stopPropagation(); App.removeBookmark('${b.type}', '${b.id}')">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
           </button>
         </div>
@@ -1601,6 +1683,583 @@ document.addEventListener('DOMContentLoaded', () => {
     removeBookmark(type, id) {
       this.toggleBookmark(type, id, '', '');
       this.openBookmarksModal();
+    },
+
+    onBookmarkClick(type, id) {
+      this.closeBookmarksModal();
+      if (type === 'quran') {
+        this.switchTab('quran');
+        const parts = String(id).split('-');
+        if (parts.length >= 2) {
+          setTimeout(() => {
+            document.getElementById(`ayah-box-${parts[0]}-${parts[1]}`)?.scrollIntoView({ behavior: 'smooth' });
+          }, 300);
+        }
+      } else {
+        this.openCardDetail(type, id);
+      }
+    },
+
+    // =========================================================================
+    // UNIVERSAL CARD DETAIL MODAL (DEEP DIVE READER)
+    // =========================================================================
+    openCardDetail(type, id) {
+      if (!window.MIRATH_DATA) return;
+
+      let item = null;
+      let itemsList = [];
+      let currentIndex = -1;
+
+      if (type === 'hadith') {
+        itemsList = window.MIRATH_DATA.hadiths || [];
+        currentIndex = itemsList.findIndex(h => String(h.id) === String(id));
+        if (currentIndex === -1 && typeof id === 'number') currentIndex = id;
+        if (currentIndex !== -1) item = itemsList[currentIndex];
+      } else if (type === 'dua') {
+        itemsList = window.MIRATH_DATA.duas || [];
+        currentIndex = itemsList.findIndex(d => String(d.id) === String(id));
+        if (currentIndex === -1 && typeof id === 'number') currentIndex = id;
+        if (currentIndex !== -1) item = itemsList[currentIndex];
+      } else if (type === 'prophet') {
+        itemsList = window.MIRATH_DATA.prophetStories || [];
+        currentIndex = itemsList.findIndex(p => p.name === id);
+        if (currentIndex === -1 && typeof id === 'number') currentIndex = id;
+        if (currentIndex !== -1) item = itemsList[currentIndex];
+      } else if (type === 'sahabah') {
+        itemsList = window.MIRATH_DATA.sahabah || [];
+        currentIndex = itemsList.findIndex(s => s.name === id);
+        if (currentIndex === -1 && typeof id === 'number') currentIndex = id;
+        if (currentIndex !== -1) item = itemsList[currentIndex];
+      } else if (type === 'quote') {
+        itemsList = window.MIRATH_DATA.scholarQuotes || [];
+        currentIndex = itemsList.findIndex(q => q.scholar === id);
+        if (currentIndex === -1 && typeof id === 'number') currentIndex = id;
+        if (currentIndex !== -1) item = itemsList[currentIndex];
+      } else if (type === 'seerah') {
+        itemsList = window.MIRATH_DATA.seerahTimeline || [];
+        currentIndex = typeof id === 'number' ? id : itemsList.findIndex(st => st.year === id || st.title === id);
+        if (currentIndex !== -1) item = itemsList[currentIndex];
+      } else if (type === 'aqeedah') {
+        itemsList = window.MIRATH_DATA.aqeedahPillars || [];
+        currentIndex = typeof id === 'number' ? id : parseInt(id, 10);
+        if (currentIndex >= 0 && currentIndex < itemsList.length) item = itemsList[currentIndex];
+      } else if (type === 'fiqh') {
+        itemsList = window.MIRATH_DATA.fiqhGuides || [];
+        currentIndex = typeof id === 'number' ? id : parseInt(id, 10);
+        if (currentIndex >= 0 && currentIndex < itemsList.length) item = itemsList[currentIndex];
+      }
+
+      if (!item) {
+        this.showToast('Unable to open card detail.', 'error');
+        return;
+      }
+
+      this.state.detailModalState = {
+        isOpen: true,
+        type,
+        id,
+        index: currentIndex,
+        items: itemsList
+      };
+
+      this.renderDetailModal(type, item, currentIndex, itemsList.length);
+
+      const modal = document.getElementById('cardDetailModal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+      }
+    },
+
+    closeCardDetailModal() {
+      const modal = document.getElementById('cardDetailModal');
+      if (modal) {
+        modal.classList.add('hidden');
+      }
+      document.body.classList.remove('overflow-hidden');
+      if (this.state.detailModalState) {
+        this.state.detailModalState.isOpen = false;
+      }
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    },
+
+    navigateCardDetail(direction) {
+      const s = this.state.detailModalState;
+      if (!s || !s.isOpen || !s.items || s.items.length === 0) return;
+
+      const nextIndex = s.index + direction;
+      if (nextIndex < 0 || nextIndex >= s.items.length) return;
+
+      const nextItem = s.items[nextIndex];
+      let nextId = nextIndex;
+      if (s.type === 'hadith' || s.type === 'dua') nextId = nextItem.id;
+      else if (s.type === 'prophet' || s.type === 'sahabah') nextId = nextItem.name;
+      else if (s.type === 'quote') nextId = nextItem.scholar;
+
+      this.openCardDetail(s.type, nextId);
+    },
+
+    renderDetailModal(type, item, index, total) {
+      const badgesEl = document.getElementById('cardDetailBadges');
+      const contentEl = document.getElementById('cardDetailContent');
+      const footerEl = document.getElementById('cardDetailFooter');
+      const prevBtn = document.getElementById('cardDetailPrevBtn');
+      const nextBtn = document.getElementById('cardDetailNextBtn');
+      const bookmarkBtn = document.getElementById('cardDetailBookmarkBtn');
+
+      if (!contentEl) return;
+
+      // Update Nav Buttons
+      if (prevBtn) {
+        prevBtn.disabled = index <= 0;
+        prevBtn.className = index <= 0
+          ? 'p-2 rounded-xl bg-[#141722]/50 text-neutral-600 border border-neutral-800/50 cursor-not-allowed'
+          : 'p-2 rounded-xl bg-[#141722] hover:bg-[#D4AF37]/20 text-neutral-400 hover:text-[#F6E27A] border border-neutral-800 hover:border-[#D4AF37]/40 transition-all';
+      }
+      if (nextBtn) {
+        nextBtn.disabled = index >= total - 1;
+        nextBtn.className = index >= total - 1
+          ? 'p-2 rounded-xl bg-[#141722]/50 text-neutral-600 border border-neutral-800/50 cursor-not-allowed'
+          : 'p-2 rounded-xl bg-[#141722] hover:bg-[#D4AF37]/20 text-neutral-400 hover:text-[#F6E27A] border border-neutral-800 hover:border-[#D4AF37]/40 transition-all';
+      }
+
+      // Check Bookmark state
+      let bookmarkId = item.id;
+      if (type === 'prophet' || type === 'sahabah') bookmarkId = item.name;
+      else if (type === 'quote') bookmarkId = item.scholar;
+      else if (type === 'seerah') bookmarkId = `seerah-${index}`;
+      else if (type === 'aqeedah') bookmarkId = `aqeedah-${index}`;
+      else if (type === 'fiqh') bookmarkId = `fiqh-${index}`;
+
+      const bookmarked = this.isBookmarked(type, bookmarkId);
+      if (bookmarkBtn) {
+        bookmarkBtn.innerHTML = `
+          <svg class="w-4 h-4 ${bookmarked ? 'text-[#D4AF37] fill-current' : 'text-neutral-400'}" fill="${bookmarked ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+        `;
+        bookmarkBtn.title = bookmarked ? 'Remove Bookmark' : 'Add to Bookmarks';
+      }
+
+      // Render based on type
+      if (type === 'hadith') {
+        if (badgesEl) {
+          badgesEl.innerHTML = `
+            <span class="text-xs px-2.5 py-1 rounded bg-[#D4AF37]/20 text-[#F6E27A] border border-[#D4AF37]/40 font-bold uppercase tracking-wider">Authentic Hadith</span>
+            <span class="text-xs px-2.5 py-1 rounded bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 font-semibold">${item.grade}</span>
+            <span class="text-[11px] text-neutral-400 font-mono">${index + 1} of ${total}</span>
+          `;
+        }
+
+        contentEl.innerHTML = `
+          <div class="border-b border-neutral-800 pb-4">
+            <h3 class="font-serif text-2xl font-bold text-white mb-1">${item.category}</h3>
+            <p class="text-xs text-[#D4AF37] font-medium">${item.narrator}</p>
+          </div>
+
+          <!-- Arabic Box -->
+          <div class="p-6 rounded-2xl bg-[#07080c] border border-[#D4AF37]/30 shadow-inner space-y-4">
+            <p class="font-arabic text-2xl sm:text-3xl md:text-4xl text-right text-[#F6E27A] leading-loose select-all font-medium">
+              ${item.arabic}
+            </p>
+            <div class="flex items-center justify-end gap-2 pt-3 border-t border-neutral-800/80">
+              <button class="text-xs px-3 py-1.5 rounded-lg bg-[#141722] hover:bg-[#D4AF37]/20 text-neutral-300 hover:text-white border border-neutral-800 flex items-center gap-1.5 transition-all" onclick="App.speakArabic('${item.arabic.replace(/'/g, "\\'")}')">
+                <svg class="w-4 h-4 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+                <span>Pronounce Arabic</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Translation -->
+          <div class="space-y-2">
+            <span class="text-xs uppercase font-bold tracking-wider text-neutral-400">English Translation</span>
+            <blockquote class="text-base sm:text-lg text-neutral-100 font-sans leading-relaxed border-l-2 border-[#D4AF37]/40 pl-4 py-1">
+              "${item.translation}"
+            </blockquote>
+          </div>
+
+          <!-- Scholarly Commentary -->
+          <div class="p-5 rounded-2xl bg-gradient-to-br from-[#121622] to-[#0c0d14] border border-[#D4AF37]/25 shadow-lg space-y-2">
+            <div class="flex items-center gap-2 text-xs font-bold text-[#F6E27A] uppercase tracking-wider">
+              <svg class="w-4 h-4 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+              <span>Scholarly Tafsir & Jurisprudence (فقه الحديث)</span>
+            </div>
+            <p class="text-sm text-neutral-300 leading-relaxed">${item.explanation}</p>
+          </div>
+
+          <!-- Citation bar -->
+          <div class="p-4 rounded-xl bg-[#0a0c10] border border-neutral-800 text-xs flex flex-wrap items-center justify-between gap-3 text-neutral-400">
+            <div><span class="text-neutral-500">Source:</span> <strong class="text-neutral-200">${item.source}</strong></div>
+            <div><span class="text-neutral-500">Authenticity:</span> <strong class="text-emerald-400">${item.grade}</strong></div>
+          </div>
+        `;
+
+        if (footerEl) {
+          footerEl.innerHTML = `
+            <div class="flex items-center gap-2">
+              <button class="btn-gold text-xs py-2 px-3.5 flex items-center gap-1.5" onclick="App.copyText('${item.arabic.replace(/'/g, "\\'")} - ${item.translation.replace(/'/g, "\\'")} [${item.source}]')">
+                <svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                <span>Copy Hadith</span>
+              </button>
+              <button class="btn-outline-gold text-xs py-2 px-3.5 flex items-center gap-1.5" onclick="App.shareDetailItem()">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                <span>Share</span>
+              </button>
+            </div>
+            <button class="text-xs text-neutral-400 hover:text-white px-3 py-1.5 rounded-lg border border-neutral-800 hover:border-neutral-600 transition-all" onclick="App.closeCardDetailModal()">
+              Close View
+            </button>
+          `;
+        }
+      } else if (type === 'dua') {
+        if (badgesEl) {
+          badgesEl.innerHTML = `
+            <span class="text-xs px-2.5 py-1 rounded bg-[#D4AF37]/20 text-[#F6E27A] border border-[#D4AF37]/40 font-bold uppercase tracking-wider">${item.category}</span>
+            <span class="text-xs px-2.5 py-1 rounded bg-neutral-800 text-neutral-300 font-mono">Target: ${item.targetCount}x</span>
+            <span class="text-[11px] text-neutral-400 font-mono">${index + 1} of ${total}</span>
+          `;
+        }
+
+        contentEl.innerHTML = `
+          <div class="border-b border-neutral-800 pb-4">
+            <h3 class="font-serif text-2xl font-bold text-white mb-1">${item.title}</h3>
+            <p class="text-xs text-neutral-400">${item.category} • Hisn al-Muslim</p>
+          </div>
+
+          <!-- Arabic Box -->
+          <div class="p-6 rounded-2xl bg-[#07080c] border border-[#D4AF37]/30 shadow-inner space-y-4">
+            <p class="font-arabic text-2xl sm:text-3xl md:text-4xl text-right text-[#F6E27A] leading-loose select-all font-medium">
+              ${item.arabic}
+            </p>
+            <div class="flex items-center justify-end gap-2 pt-3 border-t border-neutral-800/80">
+              <button class="text-xs px-3 py-1.5 rounded-lg bg-[#141722] hover:bg-[#D4AF37]/20 text-neutral-300 hover:text-white border border-neutral-800 flex items-center gap-1.5 transition-all" onclick="App.speakArabic('${item.arabic.replace(/'/g, "\\'")}')">
+                <svg class="w-4 h-4 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+                <span>Pronounce Arabic</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Transliteration -->
+          <div class="space-y-1">
+            <span class="text-xs uppercase font-bold tracking-wider text-neutral-400">Transliteration</span>
+            <p class="text-xs sm:text-sm text-neutral-300 italic">${item.transliteration}</p>
+          </div>
+
+          <!-- Translation -->
+          <div class="space-y-2">
+            <span class="text-xs uppercase font-bold tracking-wider text-neutral-400">English Meaning</span>
+            <blockquote class="text-base sm:text-lg text-neutral-100 font-sans leading-relaxed border-l-2 border-[#D4AF37]/40 pl-4 py-1">
+              "${item.translation}"
+            </blockquote>
+          </div>
+
+          <!-- Virtue & Reward Box -->
+          <div class="p-5 rounded-2xl bg-gradient-to-br from-[#121622] to-[#0c0d14] border border-[#D4AF37]/25 shadow-lg space-y-2">
+            <div class="flex items-center gap-2 text-xs font-bold text-[#F6E27A] uppercase tracking-wider">
+              <svg class="w-4 h-4 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+              <span>Virtue & Divine Reward (فضل الذكر)</span>
+            </div>
+            <p class="text-sm text-neutral-300 leading-relaxed">${item.virtue}</p>
+          </div>
+
+          <!-- Citation bar -->
+          <div class="p-4 rounded-xl bg-[#0a0c10] border border-neutral-800 text-xs flex flex-wrap items-center justify-between gap-3 text-neutral-400">
+            <div><span class="text-neutral-500">Source:</span> <strong class="text-neutral-200">${item.source}</strong></div>
+            <div><span class="text-neutral-500">Recommended Recitation:</span> <strong class="text-[#F6E27A]">${item.targetCount} times</strong></div>
+          </div>
+        `;
+
+        if (footerEl) {
+          footerEl.innerHTML = `
+            <div class="flex flex-wrap items-center gap-2">
+              <button class="btn-gold text-xs py-2 px-3.5 flex items-center gap-1.5" onclick="App.setTasbihDua('${item.arabic.replace(/'/g, "\\'")}', '${item.title.replace(/'/g, "\\'")}', ${item.targetCount}); App.closeCardDetailModal(); App.switchTab('tasbih');">
+                <svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>Send to Digital Tasbih</span>
+              </button>
+              <button class="btn-outline-gold text-xs py-2 px-3.5 flex items-center gap-1.5" onclick="App.copyText('${item.arabic.replace(/'/g, "\\'")} - ${item.translation.replace(/'/g, "\\'")} [${item.source}]')">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                <span>Copy Dua</span>
+              </button>
+              <button class="btn-outline-gold text-xs py-2 px-3.5 flex items-center gap-1.5" onclick="App.shareDetailItem()">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                <span>Share</span>
+              </button>
+            </div>
+            <button class="text-xs text-neutral-400 hover:text-white px-3 py-1.5 rounded-lg border border-neutral-800 hover:border-neutral-600 transition-all" onclick="App.closeCardDetailModal()">
+              Close View
+            </button>
+          `;
+        }
+      } else if (type === 'prophet') {
+        if (badgesEl) {
+          badgesEl.innerHTML = `
+            <span class="text-xs px-2.5 py-1 rounded bg-[#D4AF37]/20 text-[#F6E27A] border border-[#D4AF37]/40 font-bold uppercase tracking-wider">Stories of the Prophets</span>
+            <span class="text-xs px-2.5 py-1 rounded bg-[#D4AF37]/15 text-[#F6E27A] border border-[#D4AF37]/30 font-medium">${item.epithet}</span>
+            <span class="text-[11px] text-neutral-400 font-mono">${index + 1} of ${total}</span>
+          `;
+        }
+
+        contentEl.innerHTML = `
+          <div class="border-b border-neutral-800 pb-4">
+            <h3 class="font-serif text-2xl font-bold text-white mb-1">Prophet ${item.name} <span class="text-[#D4AF37] font-arabic font-normal text-xl">(عليه السلام)</span></h3>
+            <p class="text-xs text-neutral-400">${item.title}</p>
+          </div>
+
+          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 text-xs font-semibold">
+            <span>Key Prophetic Theme:</span>
+            <strong class="text-white">${item.keyTheme}</strong>
+          </div>
+
+          <!-- Full Narrative -->
+          <div class="space-y-3">
+            <span class="text-xs uppercase font-bold tracking-wider text-neutral-400">Sacred Chronicle</span>
+            <p class="text-base sm:text-lg text-neutral-200 leading-relaxed font-light">
+              ${item.story}
+            </p>
+          </div>
+
+          <!-- Qur'anic Citation & Evidences -->
+          <div class="p-5 rounded-2xl bg-gradient-to-br from-[#121622] to-[#0c0d14] border border-[#D4AF37]/25 shadow-lg space-y-2">
+            <div class="flex items-center gap-2 text-xs font-bold text-[#F6E27A] uppercase tracking-wider">
+              <svg class="w-4 h-4 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+              <span>Qur'anic Evidences & Reference</span>
+            </div>
+            <p class="text-sm text-neutral-300 leading-relaxed">Revealed in the Holy Qur'an: <strong class="text-white">${item.quranReference}</strong></p>
+          </div>
+        `;
+
+        if (footerEl) {
+          footerEl.innerHTML = `
+            <div class="flex items-center gap-2">
+              <button class="btn-gold text-xs py-2 px-3.5 flex items-center gap-1.5" onclick="App.copyText('Prophet ${item.name} (${item.epithet}) - ${item.story} [Ref: ${item.quranReference}]')">
+                <svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                <span>Copy Story</span>
+              </button>
+              <button class="btn-outline-gold text-xs py-2 px-3.5 flex items-center gap-1.5" onclick="App.shareDetailItem()">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                <span>Share</span>
+              </button>
+            </div>
+            <button class="text-xs text-neutral-400 hover:text-white px-3 py-1.5 rounded-lg border border-neutral-800 hover:border-neutral-600 transition-all" onclick="App.closeCardDetailModal()">
+              Close View
+            </button>
+          `;
+        }
+      } else if (type === 'sahabah') {
+        if (badgesEl) {
+          badgesEl.innerHTML = `
+            <span class="text-xs px-2.5 py-1 rounded bg-[#D4AF37]/20 text-[#F6E27A] border border-[#D4AF37]/40 font-bold uppercase tracking-wider">The Noble Sahabah</span>
+            <span class="text-xs px-2.5 py-1 rounded bg-[#D4AF37]/15 text-[#F6E27A] border border-[#D4AF37]/30 font-medium">${item.title}</span>
+            <span class="text-[11px] text-neutral-400 font-mono">${index + 1} of ${total}</span>
+          `;
+        }
+
+        contentEl.innerHTML = `
+          <div class="border-b border-neutral-800 pb-4">
+            <h3 class="font-serif text-2xl font-bold text-white mb-1">${item.name} <span class="text-[#D4AF37] font-arabic font-normal text-xl">(رضي الله عنه)</span></h3>
+            <p class="text-xs text-[#D4AF37] font-medium">${item.virtue}</p>
+          </div>
+
+          <!-- Biography -->
+          <div class="space-y-2">
+            <span class="text-xs uppercase font-bold tracking-wider text-neutral-400">Historic Profile & Legacy</span>
+            <p class="text-base sm:text-lg text-neutral-200 leading-relaxed font-light">
+              ${item.bio}
+            </p>
+          </div>
+
+          <!-- Timeless Quote -->
+          <div class="p-6 rounded-2xl bg-gradient-to-br from-[#141724] to-[#0c0d14] border border-[#D4AF37]/30 shadow-lg space-y-2">
+            <div class="text-xs font-bold text-[#F6E27A] uppercase tracking-wider">Timeless Words of Wisdom</div>
+            <blockquote class="text-base sm:text-lg text-neutral-100 font-serif italic leading-relaxed">
+              "${item.quote}"
+            </blockquote>
+          </div>
+        `;
+
+        if (footerEl) {
+          footerEl.innerHTML = `
+            <div class="flex items-center gap-2">
+              <button class="btn-gold text-xs py-2 px-3.5 flex items-center gap-1.5" onclick="App.copyText('${item.name} (${item.title}): \\"${item.quote}\\" - ${item.bio}')">
+                <svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                <span>Copy Chronicle</span>
+              </button>
+              <button class="btn-outline-gold text-xs py-2 px-3.5 flex items-center gap-1.5" onclick="App.shareDetailItem()">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                <span>Share</span>
+              </button>
+            </div>
+            <button class="text-xs text-neutral-400 hover:text-white px-3 py-1.5 rounded-lg border border-neutral-800 hover:border-neutral-600 transition-all" onclick="App.closeCardDetailModal()">
+              Close View
+            </button>
+          `;
+        }
+      } else if (type === 'quote') {
+        if (badgesEl) {
+          badgesEl.innerHTML = `
+            <span class="text-xs px-2.5 py-1 rounded bg-[#D4AF37]/20 text-[#F6E27A] border border-[#D4AF37]/40 font-bold uppercase tracking-wider">${item.category}</span>
+            <span class="text-xs px-2.5 py-1 rounded bg-neutral-800 text-neutral-300 font-mono">${item.era}</span>
+            <span class="text-[11px] text-neutral-400 font-mono">${index + 1} of ${total}</span>
+          `;
+        }
+
+        contentEl.innerHTML = `
+          <div class="border-b border-neutral-800 pb-4">
+            <h3 class="font-serif text-2xl font-bold text-white mb-1">${item.scholar} <span class="text-[#D4AF37] font-arabic font-normal text-xl">(رحمه الله)</span></h3>
+            <p class="text-xs text-neutral-400">Classical Luminary • Era: ${item.era}</p>
+          </div>
+
+          <div class="p-8 rounded-2xl bg-gradient-to-br from-[#151824] to-[#0c0d14] border-2 border-[#D4AF37]/35 shadow-xl space-y-4">
+            <span class="text-xs font-bold text-[#F6E27A] uppercase tracking-wider">Sacred Wisdom & Reflection</span>
+            <blockquote class="text-xl sm:text-2xl text-neutral-100 font-serif italic leading-relaxed">
+              "${item.quote}"
+            </blockquote>
+            <p class="text-xs text-[#D4AF37] font-mono text-right">— ${item.scholar}</p>
+          </div>
+        `;
+
+        if (footerEl) {
+          footerEl.innerHTML = `
+            <div class="flex items-center gap-2">
+              <button class="btn-gold text-xs py-2 px-3.5 flex items-center gap-1.5" onclick="App.copyText('${item.quote.replace(/'/g, "\\'")} — ${item.scholar.replace(/'/g, "\\'")} (${item.era})')">
+                <svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                <span>Copy Quote</span>
+              </button>
+              <button class="btn-outline-gold text-xs py-2 px-3.5 flex items-center gap-1.5" onclick="App.shareDetailItem()">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                <span>Share</span>
+              </button>
+            </div>
+            <button class="text-xs text-neutral-400 hover:text-white px-3 py-1.5 rounded-lg border border-neutral-800 hover:border-neutral-600 transition-all" onclick="App.closeCardDetailModal()">
+              Close View
+            </button>
+          `;
+        }
+      } else if (type === 'seerah') {
+        if (badgesEl) {
+          badgesEl.innerHTML = `
+            <span class="text-xs px-2.5 py-1 rounded bg-[#D4AF37]/20 text-[#F6E27A] border border-[#D4AF37]/40 font-bold uppercase tracking-wider">Prophetic Seerah</span>
+            <span class="text-xs px-2.5 py-1 rounded bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 font-bold">${item.year}</span>
+            <span class="text-[11px] text-neutral-400 font-mono">${index + 1} of ${total}</span>
+          `;
+        }
+
+        contentEl.innerHTML = `
+          <div class="border-b border-neutral-800 pb-4">
+            <h3 class="font-serif text-2xl font-bold text-white mb-1">${item.title}</h3>
+            <p class="text-xs text-neutral-400 flex items-center gap-1.5">
+              <svg class="w-4 h-4 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              <span>${item.location} • Year ${item.year}</span>
+            </p>
+          </div>
+
+          <div class="space-y-2">
+            <span class="text-xs uppercase font-bold tracking-wider text-neutral-400">Historical Event</span>
+            <p class="text-base sm:text-lg text-neutral-200 leading-relaxed font-light">
+              ${item.description}
+            </p>
+          </div>
+
+          <div class="p-5 rounded-2xl bg-gradient-to-br from-[#121622] to-[#0c0d14] border border-[#D4AF37]/25 shadow-lg space-y-2">
+            <div class="flex items-center gap-2 text-xs font-bold text-[#F6E27A] uppercase tracking-wider">
+              <svg class="w-4 h-4 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              <span>Eternal Significance for Believers</span>
+            </div>
+            <p class="text-sm text-neutral-300 leading-relaxed">${item.significance}</p>
+          </div>
+        `;
+
+        if (footerEl) {
+          footerEl.innerHTML = `
+            <div class="flex items-center gap-2">
+              <button class="btn-gold text-xs py-2 px-3.5 flex items-center gap-1.5" onclick="App.copyText('${item.title} (${item.year}, ${item.location}) - ${item.description}')">
+                <svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                <span>Copy Milestone</span>
+              </button>
+              <button class="btn-outline-gold text-xs py-2 px-3.5 flex items-center gap-1.5" onclick="App.shareDetailItem()">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                <span>Share</span>
+              </button>
+            </div>
+            <button class="text-xs text-neutral-400 hover:text-white px-3 py-1.5 rounded-lg border border-neutral-800 hover:border-neutral-600 transition-all" onclick="App.closeCardDetailModal()">
+              Close View
+            </button>
+          `;
+        }
+      } else if (type === 'aqeedah') {
+        if (badgesEl) {
+          badgesEl.innerHTML = `
+            <span class="text-xs px-2.5 py-1 rounded bg-[#D4AF37]/20 text-[#F6E27A] border border-[#D4AF37]/40 font-bold uppercase tracking-wider">6 Pillars of Iman</span>
+            <span class="text-xs px-2.5 py-1 rounded bg-neutral-800 text-neutral-300 font-mono">Pillar ${index + 1} of 6</span>
+          `;
+        }
+
+        contentEl.innerHTML = `
+          <div class="border-b border-neutral-800 pb-4 flex items-center justify-between">
+            <div>
+              <h3 class="font-serif text-2xl font-bold text-white mb-1">${item.pillar}</h3>
+              <p class="text-xs text-[#D4AF37]">Foundational Creed of Ahlus Sunnah wal-Jama'ah</p>
+            </div>
+            <span class="font-arabic text-3xl gold-text font-bold">${item.arabic}</span>
+          </div>
+
+          <div class="p-6 rounded-2xl bg-[#090b10] border border-[#D4AF37]/30 shadow-inner space-y-4">
+            <span class="text-xs font-bold text-[#F6E27A] uppercase tracking-wider">Theological Doctrine & Evidences</span>
+            <p class="text-base sm:text-lg text-neutral-200 leading-relaxed font-light">
+              ${item.details}
+            </p>
+          </div>
+        `;
+
+        if (footerEl) {
+          footerEl.innerHTML = `
+            <button class="btn-gold text-xs py-2 px-3.5 flex items-center gap-1.5" onclick="App.copyText('${item.pillar} (${item.arabic}) - ${item.details}')">
+              <svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+              <span>Copy Creed</span>
+            </button>
+            <button class="text-xs text-neutral-400 hover:text-white px-3 py-1.5 rounded-lg border border-neutral-800 hover:border-neutral-600 transition-all" onclick="App.closeCardDetailModal()">
+              Close View
+            </button>
+          `;
+        }
+      } else if (type === 'fiqh') {
+        if (badgesEl) {
+          badgesEl.innerHTML = `
+            <span class="text-xs px-2.5 py-1 rounded bg-[#D4AF37]/20 text-[#F6E27A] border border-[#D4AF37]/40 font-bold uppercase tracking-wider">Practical Fiqh Guide</span>
+            <span class="text-xs px-2.5 py-1 rounded bg-neutral-800 text-neutral-300 font-mono">${item.steps.length} Steps</span>
+          `;
+        }
+
+        contentEl.innerHTML = `
+          <div class="border-b border-neutral-800 pb-4">
+            <h3 class="font-serif text-2xl font-bold text-white mb-1">${item.title}</h3>
+            <p class="text-xs text-[#D4AF37]">Authentic Sunnah Methodology & Requirements</p>
+          </div>
+
+          <div class="space-y-3">
+            ${item.steps.map((st, i) => `
+              <div class="p-4 rounded-xl bg-[#0c0e15] border border-neutral-800/90 flex items-start gap-3.5">
+                <span class="w-6 h-6 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-[#F6E27A] text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+                  ${i + 1}
+                </span>
+                <p class="text-sm sm:text-base text-neutral-200 leading-relaxed">${st}</p>
+              </div>
+            `).join('')}
+          </div>
+        `;
+
+        if (footerEl) {
+          footerEl.innerHTML = `
+            <button class="btn-gold text-xs py-2 px-3.5 flex items-center gap-1.5" onclick="App.copyText('${item.title}:\\n${item.steps.join('\\n')}')">
+              <svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+              <span>Copy Guide</span>
+            </button>
+            <button class="text-xs text-neutral-400 hover:text-white px-3 py-1.5 rounded-lg border border-neutral-800 hover:border-neutral-600 transition-all" onclick="App.closeCardDetailModal()">
+              Close View
+            </button>
+          `;
+        }
+      }
     },
 
     // =========================================================================
@@ -1710,7 +2369,7 @@ document.addEventListener('DOMContentLoaded', () => {
             snippet: h.translation,
             action: () => {
               this.closeSearchModal();
-              this.switchTab('hadith');
+              this.openCardDetail('hadith', h.id);
             }
           });
         }
@@ -1725,7 +2384,7 @@ document.addEventListener('DOMContentLoaded', () => {
             snippet: d.translation,
             action: () => {
               this.closeSearchModal();
-              this.switchTab('duas');
+              this.openCardDetail('dua', d.id);
             }
           });
         }
@@ -1740,7 +2399,7 @@ document.addEventListener('DOMContentLoaded', () => {
             snippet: sq.quote,
             action: () => {
               this.closeSearchModal();
-              this.switchTab('quotes');
+              this.openCardDetail('quote', sq.scholar);
             }
           });
         }
@@ -1756,7 +2415,7 @@ document.addEventListener('DOMContentLoaded', () => {
               snippet: p.story,
               action: () => {
                 this.closeSearchModal();
-                this.switchTab('prophets');
+                this.openCardDetail('prophet', p.name);
               }
             });
           }
@@ -1773,7 +2432,7 @@ document.addEventListener('DOMContentLoaded', () => {
               snippet: s.bio,
               action: () => {
                 this.closeSearchModal();
-                this.switchTab('sahabah');
+                this.openCardDetail('sahabah', s.name);
               }
             });
           }
@@ -1782,7 +2441,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // 7. Search Seerah
       if (window.MIRATH_DATA.seerahTimeline) {
-        window.MIRATH_DATA.seerahTimeline.forEach(st => {
+        window.MIRATH_DATA.seerahTimeline.forEach((st, idx) => {
           if (st.title.toLowerCase().includes(q) || st.description.toLowerCase().includes(q) || st.significance.toLowerCase().includes(q) || st.year.toLowerCase().includes(q)) {
             results.push({
               category: 'Seerah',
@@ -1790,7 +2449,7 @@ document.addEventListener('DOMContentLoaded', () => {
               snippet: st.description,
               action: () => {
                 this.closeSearchModal();
-                this.switchTab('seerah');
+                this.openCardDetail('seerah', idx);
               }
             });
           }
@@ -1799,7 +2458,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // 8. Search Aqeedah & Fiqh
       if (window.MIRATH_DATA.aqeedahPillars) {
-        window.MIRATH_DATA.aqeedahPillars.forEach(a => {
+        window.MIRATH_DATA.aqeedahPillars.forEach((a, idx) => {
           if (a.pillar.toLowerCase().includes(q) || a.details.toLowerCase().includes(q) || a.arabic.includes(q)) {
             results.push({
               category: 'Aqeedah',
@@ -1807,7 +2466,7 @@ document.addEventListener('DOMContentLoaded', () => {
               snippet: a.details,
               action: () => {
                 this.closeSearchModal();
-                this.switchTab('aqeedah');
+                this.openCardDetail('aqeedah', idx);
               }
             });
           }
@@ -2604,11 +3263,32 @@ if (typeof window !== 'undefined') {
     },
 
     copyText(text) {
-      navigator.clipboard.writeText(text).then(() => {
-        alert('Copied to clipboard successfully!');
-      }).catch(() => {
-        alert('Copied!');
-      });
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          this.showToast('Copied to clipboard successfully!');
+        }).catch(() => {
+          this.fallbackCopyText(text);
+        });
+      } else {
+        this.fallbackCopyText(text);
+      }
+    },
+
+    fallbackCopyText(text) {
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        this.showToast('Copied to clipboard!');
+      } catch (err) {
+        this.showToast('Unable to copy text.', 'error');
+      }
     }
   };
 

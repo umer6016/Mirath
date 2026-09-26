@@ -365,3 +365,65 @@ input[type=range] {
   pointer-events: none;
 }
 
+/* ==========================================================================
+   INTERACTIVE CARD MICRO-INTERACTIONS & DETAIL MODAL
+   ========================================================================== */
+.interactive-card {
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), 
+              border-color 0.28s cubic-bezier(0.16, 1, 0.3, 1), 
+              box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              background 0.28s ease;
+}
+
+.interactive-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(212, 175, 55, 0.65) !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.75), 0 0 28px rgba(212, 175, 55, 0.22);
+  background: var(--bg-card-hover);
+}
+
+.interactive-card:active {
+  transform: translateY(-1px);
+}
+
+.card-click-hint {
+  opacity: 0.75;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.interactive-card:hover .card-click-hint {
+  opacity: 1;
+  transform: translateX(3px);
+}
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-enter {
+  animation: modalSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-4 {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+

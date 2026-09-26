@@ -246,7 +246,7 @@
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
         <!-- Ayah of the Day -->
-        <div class="glass-card p-6 md:p-8 border-2 border-[#D4AF37]/40 relative overflow-hidden flex flex-col justify-between">
+        <div class="glass-card interactive-card p-6 md:p-8 border-2 border-[#D4AF37]/40 relative overflow-hidden flex flex-col justify-between cursor-pointer group" onclick="App.selectSurah(2)">
           <div class="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/10 rounded-full blur-3xl pointer-events-none"></div>
           <div>
             <div class="flex items-center justify-between border-b border-neutral-800 pb-4 mb-5">
@@ -258,7 +258,7 @@
             </div>
 
             <!-- Ayah Text -->
-            <p class="font-arabic text-2xl md:text-3xl text-right text-[#F6E27A] mb-4 leading-loose">
+            <p class="font-arabic text-2xl md:text-3xl text-right text-[#F6E27A] mb-4 leading-loose group-hover:text-white transition-colors">
               اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ ۚ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ ۚ
             </p>
             <p class="text-xs md:text-sm text-neutral-400 italic mb-3">
@@ -270,19 +270,18 @@
           </div>
 
           <div class="pt-4 border-t border-neutral-800 flex items-center justify-between">
-            <button class="btn-gold text-xs py-2 px-4 flex items-center gap-2" onclick="App.playAyah(1, 0)">
+            <button class="btn-gold text-xs py-2 px-4 flex items-center gap-2" onclick="event.stopPropagation(); App.playAyah(1, 0)">
               <svg class="w-4 h-4 text-black" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
               <span>Listen Recitation</span>
             </button>
-            <button class="text-xs text-[#F6E27A] hover:underline flex items-center gap-1" onclick="App.switchTab('quran'); App.state.currentSurahIndex=1; App.renderQuranSection();">
-              <span>View Full Surah</span>
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-            </button>
+            <span class="text-xs text-[#F6E27A] group-hover:underline flex items-center gap-1">
+              <span>View Full Surah →</span>
+            </span>
           </div>
         </div>
 
         <!-- Hadith of the Day -->
-        <div class="glass-card p-6 md:p-8 border-2 border-[#D4AF37]/40 relative overflow-hidden flex flex-col justify-between">
+        <div class="glass-card interactive-card p-6 md:p-8 border-2 border-[#D4AF37]/40 relative overflow-hidden flex flex-col justify-between cursor-pointer group" onclick="App.openCardDetail('hadith', 'hadith-1')">
           <div class="absolute top-0 right-0 w-32 h-32 bg-[#10B981]/10 rounded-full blur-3xl pointer-events-none"></div>
           <div>
             <div class="flex items-center justify-between border-b border-neutral-800 pb-4 mb-5">
@@ -294,7 +293,7 @@
             </div>
 
             <!-- Hadith Text -->
-            <p class="font-arabic text-xl md:text-2xl text-right text-[#F6E27A] mb-4 leading-loose">
+            <p class="font-arabic text-xl md:text-2xl text-right text-[#F6E27A] mb-4 leading-loose group-hover:text-white transition-colors">
               إِنَّمَا الأَعْمَالُ بِالنِّيَّاتِ، وَإِنَّمَا لِكُلِّ امْرِئٍ مَا نَوَى...
             </p>
             <p class="text-neutral-200 text-sm md:text-base leading-relaxed mb-4">
@@ -307,10 +306,9 @@
 
           <div class="pt-4 border-t border-neutral-800 flex items-center justify-between">
             <span class="text-xs text-neutral-400">Narrator: Umar ibn al-Khattab (RA)</span>
-            <button class="text-xs text-[#F6E27A] hover:underline flex items-center gap-1" onclick="App.switchTab('hadith')">
-              <span>Explore All Hadiths</span>
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-            </button>
+            <span class="text-xs text-[#F6E27A] group-hover:underline flex items-center gap-1 font-semibold">
+              <span>Read Full Deep Dive →</span>
+            </span>
           </div>
         </div>
       </div>
@@ -1722,6 +1720,59 @@
 
       <!-- Bookmarks List -->
       <div id="bookmarksList" class="max-h-[60vh] overflow-y-auto space-y-3 pr-1"></div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- UNIVERSAL CARD DETAIL MODAL (DEEP DIVE READER) -->
+  <!-- ===================================================================== -->
+  <div id="cardDetailModal" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 hidden" onclick="if(event.target === this) App.closeCardDetailModal()">
+    <div id="cardDetailModalBox" class="glass-card w-full max-w-3xl max-h-[90vh] flex flex-col border-2 border-[#D4AF37]/50 shadow-[0_20px_70px_rgba(0,0,0,0.9),0_0_40px_rgba(212,175,55,0.2)] bg-[#0c0e15]/98 rounded-3xl overflow-hidden relative modal-enter">
+      
+      <!-- Top Ambient Glow -->
+      <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-32 bg-[#D4AF37]/15 rounded-full blur-3xl pointer-events-none"></div>
+
+      <!-- Modal Header Bar -->
+      <div class="px-5 py-4 sm:px-7 sm:py-4 border-b border-neutral-800/80 flex items-center justify-between gap-3 bg-[#0a0c12]/80 backdrop-blur-md relative z-10 shrink-0">
+        
+        <!-- Left: Category Badges -->
+        <div class="flex flex-wrap items-center gap-2 min-w-0" id="cardDetailBadges">
+          <!-- Dynamically populated -->
+        </div>
+
+        <!-- Right: Navigation, Bookmark & Close Actions -->
+        <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <!-- Previous Button -->
+          <button id="cardDetailPrevBtn" class="p-2 rounded-xl bg-[#141722] hover:bg-[#D4AF37]/20 text-neutral-400 hover:text-[#F6E27A] border border-neutral-800 hover:border-[#D4AF37]/40 transition-all" title="Previous Item (Left Arrow)" onclick="App.navigateCardDetail(-1)">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          
+          <!-- Next Button -->
+          <button id="cardDetailNextBtn" class="p-2 rounded-xl bg-[#141722] hover:bg-[#D4AF37]/20 text-neutral-400 hover:text-[#F6E27A] border border-neutral-800 hover:border-[#D4AF37]/40 transition-all" title="Next Item (Right Arrow)" onclick="App.navigateCardDetail(1)">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          </button>
+
+          <!-- Bookmark Toggle inside Modal -->
+          <button id="cardDetailBookmarkBtn" class="p-2 rounded-xl bg-[#141722] hover:bg-[#D4AF37]/20 text-neutral-400 hover:text-[#D4AF37] border border-neutral-800 hover:border-[#D4AF37]/40 transition-all" title="Bookmark this item" onclick="App.toggleBookmarkFromDetail()">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+          </button>
+
+          <!-- Close Modal Button -->
+          <button class="p-2 rounded-xl bg-[#141722] hover:bg-red-500/20 text-neutral-400 hover:text-white border border-neutral-800 hover:border-red-500/40 transition-all ml-1" title="Close (Esc)" onclick="App.closeCardDetailModal()">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Scrollable Content -->
+      <div id="cardDetailContent" class="overflow-y-auto px-5 py-6 sm:px-8 sm:py-8 space-y-6 flex-1 pr-3 sm:pr-6">
+        <!-- Injected dynamically by App.renderDetailModal() -->
+      </div>
+
+      <!-- Modal Footer Toolbar -->
+      <div id="cardDetailFooter" class="px-5 py-3.5 sm:px-8 sm:py-4 border-t border-neutral-800/80 bg-[#090b10] flex flex-wrap items-center justify-between gap-3 shrink-0 relative z-10">
+        <!-- Injected dynamically -->
+      </div>
     </div>
   </div>
 
