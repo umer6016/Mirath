@@ -444,28 +444,73 @@
     <!-- ===================================================================== -->
     <section id="tab-quran" class="tab-content-panel hidden space-y-8">
       <!-- Section Header -->
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#D4AF37]/20 pb-6">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-[#D4AF37]/20 pb-6">
         <div>
           <div class="flex items-center gap-2 mb-1">
-            <span class="text-xs font-bold uppercase tracking-wider text-[#D4AF37]">Al-Qur'an al-Kareem</span>
+            <span class="text-xs font-bold uppercase tracking-wider text-[#D4AF37]">Al-Qur'an al-Kareem (114 Chapters)</span>
             <span class="text-xs px-2 py-0.5 rounded bg-[#D4AF37]/10 text-[#F6E27A] border border-[#D4AF37]/20">Mishary Alafasy Recitations</span>
           </div>
           <h2 class="font-serif text-3xl font-bold text-white">The Holy Qur'an & Hifdh Studio</h2>
-          <p class="text-xs sm:text-sm text-neutral-400 mt-1">Uthmani Arabic text with verbatim translations, audio repetitions, and interactive word masking for memorisation.</p>
+          <p class="text-xs sm:text-sm text-neutral-400 mt-1">Complete 114 Surahs in Uthmani script with verbatim English translations, Mishary Alafasy audio recitation, and active word masking for memorisation.</p>
         </div>
 
-        <!-- Surah Selector -->
-        <div class="min-w-[280px]">
-          <label for="surahSelectDropdown" class="block text-xs text-neutral-400 font-medium mb-1.5">Select Surah / Passage:</label>
-          <div class="relative">
-            <select id="surahSelectDropdown" class="w-full bg-[#12141d] border-2 border-[#D4AF37]/40 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#D4AF37] cursor-pointer">
-              <!-- Dynamically populated -->
-            </select>
+        <!-- Controls: View Mode & Surah Dropdown -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <!-- View Mode Toggle -->
+          <div class="inline-flex rounded-xl bg-[#12141d] p-1 border border-[#D4AF37]/30 shrink-0">
+            <button id="btnQuranReaderView" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#D4AF37] text-black transition-all" onclick="App.setQuranViewMode('reader')">
+              📖 Reader View
+            </button>
+            <button id="btnQuranDirectoryView" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-neutral-400 hover:text-white transition-all" onclick="App.setQuranViewMode('directory')">
+              🏛️ 114 Chapters
+            </button>
+          </div>
+
+          <!-- Surah Selector Dropdown -->
+          <div class="min-w-[240px] sm:min-w-[280px]">
+            <div class="relative">
+              <select id="surahSelectDropdown" class="w-full bg-[#12141d] border-2 border-[#D4AF37]/40 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-[#D4AF37] cursor-pointer">
+                <!-- Dynamically populated with all 114 Surahs -->
+              </select>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Surah Rendering Container (Populated by App.renderQuranSection) -->
+      <!-- 114 SURAHS DIRECTORY VIEW (Search & Grid) -->
+      <div id="quranDirectorySection" class="hidden space-y-6">
+        <!-- Directory Search & Filters -->
+        <div class="glass-card p-4 border border-[#D4AF37]/20 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+          <div class="relative flex-1">
+            <input 
+              type="text" 
+              id="surahDirectorySearchInput" 
+              placeholder="Search by Surah name, number, or translation (e.g. 36, Yaseen, Mulk, Kahf)..." 
+              class="w-full bg-[#0a0b10] border border-[#D4AF37]/30 rounded-xl px-4 py-2.5 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-[#D4AF37]"
+              oninput="App.filterSurahDirectory(this.value)"
+            >
+          </div>
+          <div class="flex items-center gap-2 text-xs">
+            <span class="text-neutral-400">Filter:</span>
+            <button id="filterSurahAll" class="px-3 py-1 rounded-lg bg-[#D4AF37] text-black font-semibold" onclick="App.setSurahDirectoryFilter('all')">
+              All (114)
+            </button>
+            <button id="filterSurahMeccan" class="px-3 py-1 rounded-lg bg-[#14161f] text-neutral-300 hover:text-white border border-neutral-800" onclick="App.setSurahDirectoryFilter('Meccan')">
+              Meccan (86)
+            </button>
+            <button id="filterSurahMedinan" class="px-3 py-1 rounded-lg bg-[#14161f] text-neutral-300 hover:text-white border border-neutral-800" onclick="App.setSurahDirectoryFilter('Medinan')">
+              Medinan (28)
+            </button>
+          </div>
+        </div>
+
+        <!-- Directory Grid -->
+        <div id="quranSurahsGridContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <!-- Populated by App.renderSurahDirectory -->
+        </div>
+      </div>
+
+      <!-- Surah Reader Container (Populated by App.renderQuranSection) -->
       <div id="quranSurahContainer"></div>
     </section>
 
@@ -1559,6 +1604,7 @@
   </footer>
 
   <!-- Core JavaScript Repositories -->
+  <script src="js/surahs.js"></script>
   <script src="js/data.js"></script>
   <script src="js/app.js"></script>
 </body>

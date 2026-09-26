@@ -8,6 +8,10 @@ document.addEventListener('DOMContentLoaded', () => {
     state: {
       activeTab: 'home',
       currentSurahIndex: 0,
+      currentSurahNumber: 1,
+      quranViewMode: 'reader',
+      surahDirectoryFilter: 'all',
+      surahDirectorySearch: '',
       currentAyahIndex: 0,
       audioPlaying: false,
       audioLoopCount: 0,
@@ -43,12 +47,15 @@ document.addEventListener('DOMContentLoaded', () => {
     elements: {},
     audio: new Audio(),
     audioContext: null,
+    loadedSurahs: {},
 
     async init() {
       this.cacheElements();
+      this.initSurahsCache();
       await this.loadCustomData();
       this.bindEvents();
       this.renderAll();
+      this.renderSurahDirectory();
       this.calculateZakat();
       this.updateAdminLockUI();
       this.applyNavVisibility();
@@ -203,56 +210,340 @@ document.addEventListener('DOMContentLoaded', () => {
     },
 
     // =========================================================================
-    // QUR'AN & HIFDH MEMORISATION TOOL
+    // QUR'AN & HIFDH MEMORISATION TOOL (ALL 114 CHAPTERS)
     // =========================================================================
-    renderQuranSection() {
+    initSurahsCache() {
+      this.loadedSurahs = {};
+      if (window.MIRATH_DATA && window.MIRATH_DATA.quran) {
+        window.MIRATH_DATA.quran.forEach(s => {
+          this.loadedSurahs[s.surahNumber] = s;
+        });
+      }
+    },
+
+    setQuranViewMode(mode) {
+      this.state.quranViewMode = mode;
+      const readerBtn = document.getElementById('btnQuranReaderView');
+      const dirBtn = document.getElementById('btnQuranDirectoryView');
+      const dirSection = document.getElementById('quranDirectorySection');
+      const readerSection = document.getElementById('quranSurahContainer');
+
+      if (mode === 'directory') {
+        if (readerBtn) {
+          readerBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold text-neutral-400 hover:text-white transition-all';
+        }
+        if (dirBtn) {
+          dirBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#D4AF37] text-black transition-all';
+        }
+        if (dirSection) dirSection.classList.remove('hidden');
+        if (readerSection) readerSection.classList.add('hidden');
+        this.renderSurahDirectory();
+      } else {
+        if (readerBtn) {
+          readerBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#D4AF37] text-black transition-all';
+        }
+        if (dirBtn) {
+          dirBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold text-neutral-400 hover:text-white transition-all';
+        }
+        if (dirSection) dirSection.classList.add('hidden');
+        if (readerSection) readerSection.classList.remove('hidden');
+      }
+    },
+
+    setSurahDirectoryFilter(filter) {
+      this.state.surahDirectoryFilter = filter;
+      const allBtn = document.getElementById('filterSurahAll');
+      const meccBtn = document.getElementById('filterSurahMeccan');
+      const medBtn = document.getElementById('filterSurahMedinan');
+
+      const activeClass = 'px-3 py-1 rounded-lg bg-[#D4AF37] text-black font-semibold';
+      const inactiveClass = 'px-3 py-1 rounded-lg bg-[#14161f] text-neutral-300 hover:text-white border border-neutral-800';
+
+      if (allBtn) allBtn.className = filter === 'all' ? activeClass : inactiveClass;
+      if (meccBtn) meccBtn.className = filter === 'Meccan' ? activeClass : inactiveClass;
+      if (medBtn) medBtn.className = filter === 'Medinan' ? activeClass : inactiveClass;
+
+      this.renderSurahDirectory();
+    },
+
+    filterSurahDirectory(query) {
+      this.state.surahDirectorySearch = query.trim().toLowerCase();
+      this.renderSurahDirectory();
+    },
+
+    renderSurahDirectory() {
+      const container = document.getElementById('quranSurahsGridContainer');
+      if (!container || !window.MIRATH_SURAHS) return;
+
+      const filter = this.state.surahDirectoryFilter || 'all';
+      const q = this.state.surahDirectorySearch || '';
+
+      const filtered = window.MIRATH_SURAHS.filter(s => {
+        const matchesFilter = filter === 'all' || s.revelationType === filter;
+        if (!matchesFilter) return false;
+        if (!q) return true;
+        return (
+          s.nameEnglish.toLowerCase().includes(q) ||
+          s.nameArabic.includes(q) ||
+          s.translation.toLowerCase().includes(q) ||
+          String(s.number) === q ||
+          `surah ${s.number}`.includes(q)
+        );
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full text-center py-12 text-neutral-400">
+            <p class="text-sm">No chapters found matching "${this.state.surahDirectorySearch}".</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(s => {
+        const isCurrent = this.state.currentSurahNumber === s.number;
+        return `
+          <div 
+            onclick="App.selectSurah(${s.number})"
+            class="glass-card p-5 border ${isCurrent ? 'border-[#D4AF37] bg-[#D4AF37]/10' : 'border-[#D4AF37]/20'} hover:border-[#D4AF37] cursor-pointer group flex flex-col justify-between transition-all"
+          >
+            <div>
+              <div class="flex items-center justify-between mb-3 border-b border-neutral-800/80 pb-2">
+                <span class="w-8 h-8 rounded-lg bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-[#F6E27A] font-bold text-xs flex items-center justify-center font-mono">
+                  ${s.number}
+                </span>
+                <span class="text-[10px] font-semibold px-2 py-0.5 rounded ${s.revelationType === 'Meccan' ? 'bg-[#D4AF37]/15 text-[#F6E27A] border border-[#D4AF37]/30' : 'bg-emerald-950/40 text-emerald-300 border border-emerald-500/30'}">
+                  ${s.revelationType}
+                </span>
+              </div>
+
+              <div class="flex items-baseline justify-between gap-2 mb-1">
+                <h4 class="font-serif text-base font-bold text-white group-hover:text-[#F6E27A] transition-colors truncate">
+                  ${s.nameEnglish}
+                </h4>
+                <span class="font-arabic text-xl gold-text font-bold shrink-0">
+                  ${s.nameArabic}
+                </span>
+              </div>
+
+              <p class="text-xs text-neutral-400 truncate mb-3">
+                ${s.translation}
+              </p>
+            </div>
+
+            <div class="pt-3 border-t border-neutral-800/60 flex items-center justify-between text-xs text-neutral-500">
+              <span>${s.numberOfAyahs} Verses</span>
+              <span class="text-[#D4AF37] group-hover:translate-x-1 transition-transform flex items-center gap-1 font-semibold">
+                Read →
+              </span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    },
+
+    async selectSurah(surahNumber) {
+      this.state.currentSurahNumber = parseInt(surahNumber, 10);
+      this.state.currentAyahIndex = 0;
+      this.setQuranViewMode('reader');
+      this.switchTab('quran');
+      await this.renderQuranSection();
+      const container = document.getElementById('quranSurahContainer');
+      if (container) {
+        container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    },
+
+    async getSurah(surahNumber) {
+      // 1. Memory check
+      if (this.loadedSurahs && this.loadedSurahs[surahNumber]) {
+        return this.loadedSurahs[surahNumber];
+      }
+
+      // 2. Pre-packaged check
+      if (window.MIRATH_DATA && window.MIRATH_DATA.quran) {
+        const found = window.MIRATH_DATA.quran.find(s => s.surahNumber === surahNumber);
+        if (found) {
+          this.loadedSurahs[surahNumber] = found;
+          return found;
+        }
+      }
+
+      // 3. LocalStorage cache check
+      try {
+        const cached = localStorage.getItem('mirath_surah_' + surahNumber);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed && parsed.ayahs && parsed.ayahs.length) {
+            this.loadedSurahs[surahNumber] = parsed;
+            return parsed;
+          }
+        }
+      } catch (e) {}
+
+      // 4. Fetch from AlQuran Cloud API
+      const meta = (window.MIRATH_SURAHS && window.MIRATH_SURAHS.find(s => s.number === surahNumber)) || {
+        number: surahNumber,
+        nameArabic: '',
+        nameEnglish: 'Surah ' + surahNumber,
+        translation: '',
+        numberOfAyahs: 0,
+        revelationType: 'Meccan'
+      };
+
+      const resp = await fetch(`https://api.alquran.cloud/v1/surah/${surahNumber}/editions/quran-uthmani,en.sahih`);
+      if (!resp.ok) throw new Error('Network error loading Surah ' + surahNumber);
+      const json = await resp.json();
+      if (!json || json.code !== 200 || !json.data || json.data.length < 2) {
+        throw new Error('Invalid response from Quran API');
+      }
+
+      const arData = json.data[0];
+      const enData = json.data[1];
+
+      const ayahs = arData.ayahs.map((arAyah, idx) => {
+        const enAyah = enData.ayahs[idx] || { text: '' };
+        let arText = arAyah.text || '';
+        if (surahNumber !== 1 && surahNumber !== 9 && idx === 0 && arText.startsWith('بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ')) {
+          arText = arText.replace(/^بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ\s*/, '').trim();
+        }
+        const words = arText.split(/\s+/).filter(Boolean);
+        return {
+          numberInSurah: arAyah.numberInSurah,
+          globalNumber: arAyah.number,
+          arabic: arText,
+          transliteration: '',
+          translation: enAyah.text,
+          audio: `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${arAyah.number}.mp3`,
+          words: words
+        };
+      });
+
+      const surahObj = {
+        id: 'surah-' + surahNumber,
+        surahNumber: surahNumber,
+        nameArabic: meta.nameArabic || arData.name,
+        nameEnglish: meta.nameEnglish || arData.englishName,
+        translation: meta.translation || arData.englishNameTranslation,
+        revelationType: meta.revelationType || arData.revelationType,
+        totalVerses: meta.numberOfAyahs || ayahs.length,
+        bismillah: surahNumber !== 1 && surahNumber !== 9,
+        ayahs: ayahs
+      };
+
+      this.loadedSurahs[surahNumber] = surahObj;
+      try {
+        localStorage.setItem('mirath_surah_' + surahNumber, JSON.stringify(surahObj));
+      } catch (e) {}
+      return surahObj;
+    },
+
+    async renderQuranSection() {
       const container = document.getElementById('quranSurahContainer');
       const selector = document.getElementById('surahSelectDropdown');
-      if (!container || !window.MIRATH_DATA) return;
+      if (!container) return;
 
-      const currentSurah = window.MIRATH_DATA.quran[this.state.currentSurahIndex];
+      const surahNumber = this.state.currentSurahNumber || 1;
 
-      // Render selector options once if empty
-      if (selector && selector.children.length <= 1) {
-        selector.innerHTML = window.MIRATH_DATA.quran.map((s, idx) => `
-          <option value="${idx}" ${idx === this.state.currentSurahIndex ? 'selected' : ''}>
-            ${s.surahNumber}. ${s.nameEnglish} (${s.nameArabic}) - ${s.translation}
-          </option>
-        `).join('');
-
+      // Populate selector dropdown with all 114 Surahs if not done
+      if (selector && (selector.children.length <= 1 || selector.children.length < 114)) {
+        if (window.MIRATH_SURAHS && window.MIRATH_SURAHS.length) {
+          selector.innerHTML = window.MIRATH_SURAHS.map(s => `
+            <option value="${s.number}" ${s.number === surahNumber ? 'selected' : ''}>
+              ${s.number}. ${s.nameEnglish} (${s.nameArabic}) - ${s.translation} [${s.numberOfAyahs} Ayahs]
+            </option>
+          `).join('');
+        }
         selector.addEventListener('change', (e) => {
-          this.state.currentSurahIndex = parseInt(e.target.value, 10);
-          this.state.currentAyahIndex = 0;
-          this.renderQuranSection();
+          this.selectSurah(e.target.value);
         });
       }
       if (selector) {
-        selector.value = this.state.currentSurahIndex;
+        selector.value = surahNumber;
       }
+
+      // Check if data is ready or needs fetching
+      let currentSurah = this.loadedSurahs && this.loadedSurahs[surahNumber];
+      if (!currentSurah) {
+        const meta = (window.MIRATH_SURAHS && window.MIRATH_SURAHS.find(s => s.number === surahNumber)) || {
+          nameEnglish: `Surah ${surahNumber}`,
+          nameArabic: '',
+          translation: ''
+        };
+        container.innerHTML = `
+          <div class="glass-card p-12 text-center border border-[#D4AF37]/30 my-8">
+            <div class="w-16 h-16 mx-auto mb-5 border-4 border-[#D4AF37]/20 border-t-[#D4AF37] rounded-full animate-spin"></div>
+            <h3 class="font-serif text-2xl font-bold text-white mb-2">Loading ${meta.nameEnglish}</h3>
+            <p class="font-arabic text-xl gold-text mb-4">${meta.nameArabic}</p>
+            <p class="text-xs text-neutral-400">Fetching Uthmani text, Saheeh International translation, and Mishary Alafasy audio...</p>
+          </div>
+        `;
+        try {
+          currentSurah = await this.getSurah(surahNumber);
+        } catch (err) {
+          container.innerHTML = `
+            <div class="glass-card p-8 text-center border border-red-500/40 my-8">
+              <p class="text-red-400 font-bold mb-2">Unable to load Surah ${surahNumber}</p>
+              <p class="text-xs text-neutral-400 mb-4">${err.message || 'Please check your internet connection.'}</p>
+              <button class="btn-gold text-xs" onclick="App.selectSurah(${surahNumber})">Retry</button>
+            </div>
+          `;
+          return;
+        }
+      }
+
+      // Metadata for Prev and Next Surahs
+      const prevSurahNum = surahNumber > 1 ? surahNumber - 1 : null;
+      const nextSurahNum = surahNumber < 114 ? surahNumber + 1 : null;
+      const prevMeta = prevSurahNum && window.MIRATH_SURAHS ? window.MIRATH_SURAHS.find(s => s.number === prevSurahNum) : null;
+      const nextMeta = nextSurahNum && window.MIRATH_SURAHS ? window.MIRATH_SURAHS.find(s => s.number === nextSurahNum) : null;
 
       // Render Ayahs
       container.innerHTML = `
         <div class="glass-card p-6 md:p-8 mb-8 border border-[#D4AF37]/30">
+          
+          <!-- Surah Header Banner -->
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#D4AF37]/20 pb-6 mb-6">
             <div>
               <div class="flex items-center gap-3">
-                <span class="w-9 h-9 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37] text-[#D4AF37] flex items-center justify-center font-bold text-sm">
+                <span class="w-10 h-10 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37] text-[#D4AF37] flex items-center justify-center font-bold text-sm font-mono shadow-sm">
                   ${currentSurah.surahNumber}
                 </span>
-                <h2 class="text-2xl md:text-3xl font-bold font-cinzel text-white">${currentSurah.nameEnglish}</h2>
-                <span class="text-xs px-2.5 py-1 rounded bg-[#D4AF37]/15 text-[#F6E27A] border border-[#D4AF37]/30">${currentSurah.revelationType}</span>
+                <div>
+                  <h2 class="text-2xl md:text-3xl font-bold font-serif text-white">${currentSurah.nameEnglish}</h2>
+                  <p class="text-neutral-400 text-xs mt-0.5">${currentSurah.translation} • ${currentSurah.totalVerses} Verses</p>
+                </div>
+                <span class="text-xs px-2.5 py-1 rounded bg-[#D4AF37]/15 text-[#F6E27A] border border-[#D4AF37]/30 font-semibold self-start">${currentSurah.revelationType}</span>
               </div>
-              <p class="text-neutral-400 text-sm mt-1">${currentSurah.translation} • ${currentSurah.totalVerses} Verses</p>
             </div>
             
-            <div class="text-right">
-              <span class="font-arabic text-3xl md:text-4xl gold-text font-bold">${currentSurah.nameArabic}</span>
+            <div class="flex items-center gap-4 self-end md:self-center">
+              <span class="font-arabic text-3xl md:text-5xl gold-text font-bold">${currentSurah.nameArabic}</span>
             </div>
+          </div>
+
+          <!-- Top Navigation (Prev / Next Surah) -->
+          <div class="flex items-center justify-between text-xs pb-4 border-b border-neutral-800/80 mb-6 gap-2">
+            ${prevSurahNum ? `
+              <button onclick="App.selectSurah(${prevSurahNum})" class="px-3 py-1.5 rounded-lg bg-[#141620] hover:bg-[#D4AF37]/20 text-neutral-300 hover:text-white border border-neutral-800 flex items-center gap-1.5 transition-all">
+                <span>← Surah ${prevSurahNum} (${prevMeta ? prevMeta.nameEnglish : ''})</span>
+              </button>
+            ` : '<div></div>'}
+
+            <button onclick="App.setQuranViewMode('directory')" class="px-3 py-1.5 rounded-lg bg-[#D4AF37]/15 hover:bg-[#D4AF37]/30 text-[#F6E27A] border border-[#D4AF37]/30 font-semibold flex items-center gap-1.5 transition-all">
+              <span>🏛️ All 114 Chapters</span>
+            </button>
+
+            ${nextSurahNum ? `
+              <button onclick="App.selectSurah(${nextSurahNum})" class="px-3 py-1.5 rounded-lg bg-[#141620] hover:bg-[#D4AF37]/20 text-neutral-300 hover:text-white border border-neutral-800 flex items-center gap-1.5 transition-all">
+                <span>Surah ${nextSurahNum} (${nextMeta ? nextMeta.nameEnglish : ''}) →</span>
+              </button>
+            ` : '<div></div>'}
           </div>
 
           <!-- Bismillah if applicable -->
           ${currentSurah.bismillah ? `
-            <div class="text-center py-6 font-arabic text-2xl md:text-3xl gold-text select-none">
+            <div class="text-center py-6 font-arabic text-3xl md:text-4xl gold-text select-none border-b border-neutral-900 mb-6">
               بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
             </div>
           ` : ''}
@@ -289,6 +580,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ${currentSurah.ayahs.map((ayah, aIdx) => {
               const isMemorized = this.state.memorizedAyahs.includes(`${currentSurah.id}-${ayah.numberInSurah}`);
               const isBookmarked = this.isBookmarked('ayah', `${currentSurah.id}-${ayah.numberInSurah}`);
+              const wordsArr = ayah.words && ayah.words.length ? ayah.words : ayah.arabic.split(/\s+/).filter(Boolean);
               return `
                 <div class="p-5 md:p-6 rounded-xl bg-[#0c0d12]/90 border ${isMemorized ? 'border-emerald-500/40 bg-emerald-950/10' : 'border-[#D4AF37]/15'} hover:border-[#D4AF37]/40 transition-all" id="ayah-box-${currentSurah.id}-${ayah.numberInSurah}">
                   <div class="flex items-center justify-between gap-4 border-b border-neutral-800/80 pb-3 mb-4">
@@ -300,7 +592,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
 
                     <div class="flex items-center gap-2">
-                      <button class="p-2 rounded-lg bg-[#161820] hover:bg-[#D4AF37]/20 text-[#D4AF37] transition-all" title="Listen to Ayah" onclick="App.playAyah(${this.state.currentSurahIndex}, ${aIdx})">
+                      <button class="p-2 rounded-lg bg-[#161820] hover:bg-[#D4AF37]/20 text-[#D4AF37] transition-all" title="Listen to Ayah" onclick="App.playAyah(${currentSurah.surahNumber}, ${aIdx})">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                       </button>
                       <button class="p-2 rounded-lg bg-[#161820] hover:bg-[#D4AF37]/20 ${isBookmarked ? 'text-[#D4AF37]' : 'text-neutral-400'} transition-all" title="Bookmark Ayah" onclick="App.toggleBookmark('ayah', '${currentSurah.id}-${ayah.numberInSurah}', '${currentSurah.nameEnglish} Ayah ${ayah.numberInSurah}', '${ayah.arabic.replace(/'/g, "\\'")}')">
@@ -309,21 +601,26 @@ document.addEventListener('DOMContentLoaded', () => {
                       <button class="p-2 rounded-lg bg-[#161820] hover:bg-emerald-500/20 ${isMemorized ? 'text-emerald-400' : 'text-neutral-400'} transition-all" title="Mark as Memorized" onclick="App.toggleMemorized('${currentSurah.id}-${ayah.numberInSurah}')">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                       </button>
+                      <button class="p-2 rounded-lg bg-[#161820] hover:bg-[#D4AF37]/20 text-neutral-400 hover:text-white transition-all" title="Copy Ayah" onclick="App.copyText('${ayah.arabic.replace(/'/g, "\\'")} - ${ayah.translation.replace(/'/g, "\\'")}')">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                      </button>
                     </div>
                   </div>
 
                   <!-- Arabic Ayah Text -->
                   <div class="font-arabic text-2xl md:text-3xl text-right text-[#F6E27A] mb-4 leading-loose tracking-wide select-none">
                     ${this.state.hifdhWordMask 
-                      ? ayah.words.map(w => `<span class="hifdh-masked-word hifdh-mask-active" onclick="this.classList.toggle('hifdh-mask-revealed'); this.classList.toggle('hifdh-mask-active')">${w}</span>`).join(' ')
+                      ? wordsArr.map(w => `<span class="hifdh-masked-word hifdh-mask-active" onclick="this.classList.toggle('hifdh-mask-revealed'); this.classList.toggle('hifdh-mask-active')">${w}</span>`).join(' ')
                       : ayah.arabic}
                     <span class="inline-block text-[#D4AF37] font-serif text-lg mx-2">۝${this.convertToArabicNumber(ayah.numberInSurah)}</span>
                   </div>
 
-                  <!-- Transliteration -->
-                  <div class="text-xs md:text-sm text-neutral-400 italic mb-2">
-                    ${ayah.transliteration}
-                  </div>
+                  <!-- Transliteration if available -->
+                  ${ayah.transliteration ? `
+                    <div class="text-xs md:text-sm text-neutral-400 italic mb-2">
+                      ${ayah.transliteration}
+                    </div>
+                  ` : ''}
 
                   <!-- Translation (Blur-capable for testing) -->
                   <div class="text-sm md:text-base text-neutral-200 ${this.state.hifdhHideTranslation ? 'blur-translation' : ''}" title="${this.state.hifdhHideTranslation ? 'Hover to reveal translation' : ''}">
@@ -333,6 +630,26 @@ document.addEventListener('DOMContentLoaded', () => {
               `;
             }).join('')}
           </div>
+
+          <!-- Bottom Navigation (Prev / Next Surah) -->
+          <div class="flex items-center justify-between text-xs pt-8 border-t border-neutral-800/80 mt-8 gap-2">
+            ${prevSurahNum ? `
+              <button onclick="App.selectSurah(${prevSurahNum})" class="btn-outline-gold text-xs py-2 px-3 flex items-center gap-1.5">
+                <span>← Previous: ${prevMeta ? prevMeta.nameEnglish : ''}</span>
+              </button>
+            ` : '<div></div>'}
+
+            <button onclick="window.scrollTo({ top: 0, behavior: 'smooth' })" class="px-3 py-2 rounded-lg bg-[#141620] hover:bg-[#D4AF37]/20 text-neutral-400 hover:text-white border border-neutral-800 text-xs">
+              ↑ Back to Top
+            </button>
+
+            ${nextSurahNum ? `
+              <button onclick="App.selectSurah(${nextSurahNum})" class="btn-gold text-xs py-2 px-3 flex items-center gap-1.5">
+                <span>Next: ${nextMeta ? nextMeta.nameEnglish : ''} →</span>
+              </button>
+            ` : '<div></div>'}
+          </div>
+
         </div>
       `;
 
@@ -391,17 +708,32 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================================================================
     // AUDIO PLAYER
     // =========================================================================
-    playAyah(surahIdx, ayahIdx) {
-      this.state.currentSurahIndex = surahIdx;
+    playAyah(surahNumOrIdx, ayahIdx) {
+      let surah = null;
+      let surahNum = 1;
+      if (typeof surahNumOrIdx === 'number' && surahNumOrIdx >= 1 && surahNumOrIdx <= 114) {
+        surahNum = surahNumOrIdx;
+        surah = (this.loadedSurahs && this.loadedSurahs[surahNum]) || (window.MIRATH_DATA.quran && window.MIRATH_DATA.quran.find(s => s.surahNumber === surahNum));
+      } else if (window.MIRATH_DATA.quran && window.MIRATH_DATA.quran[surahNumOrIdx]) {
+        surah = window.MIRATH_DATA.quran[surahNumOrIdx];
+        surahNum = surah.surahNumber;
+      }
+      if (!surah) {
+        surah = (this.loadedSurahs && this.loadedSurahs[this.state.currentSurahNumber]) || (window.MIRATH_DATA.quran && window.MIRATH_DATA.quran[0]);
+        if (surah) surahNum = surah.surahNumber;
+      }
+
+      this.state.currentSurahNumber = surahNum;
       this.state.currentAyahIndex = ayahIdx;
-      const surah = window.MIRATH_DATA.quran[surahIdx];
+
+      if (!surah || !surah.ayahs || !surah.ayahs[ayahIdx]) return;
       const ayah = surah.ayahs[ayahIdx];
 
-      this.audio.src = ayah.audio;
+      this.audio.src = ayah.audio || `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${ayah.globalNumber}.mp3`;
       this.audio.play().then(() => {
-        this.elements.audioBar.classList.remove('hidden');
-        this.elements.audioSurahTitle.innerText = `${surah.nameEnglish} (${surah.nameArabic})`;
-        this.elements.audioAyahInfo.innerText = `Ayah ${ayah.numberInSurah} of ${surah.totalVerses} • Reciter: Mishary Alafasy`;
+        if (this.elements.audioBar) this.elements.audioBar.classList.remove('hidden');
+        if (this.elements.audioSurahTitle) this.elements.audioSurahTitle.innerText = `${surah.nameEnglish} (${surah.nameArabic})`;
+        if (this.elements.audioAyahInfo) this.elements.audioAyahInfo.innerText = `Ayah ${ayah.numberInSurah} of ${surah.totalVerses} • Reciter: Mishary Alafasy`;
         this.setAudioPlayState(true);
       }).catch(err => {
         console.warn('Audio play restricted or network issue:', err);
@@ -443,24 +775,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Loop finished, proceed to next ayah if available
       this.state.audioLoopCount = 0;
-      const surah = window.MIRATH_DATA.quran[this.state.currentSurahIndex];
-      if (this.state.currentAyahIndex + 1 < surah.ayahs.length) {
-        this.playAyah(this.state.currentSurahIndex, this.state.currentAyahIndex + 1);
+      const surah = (this.loadedSurahs && this.loadedSurahs[this.state.currentSurahNumber]) || (window.MIRATH_DATA.quran && window.MIRATH_DATA.quran.find(s => s.surahNumber === this.state.currentSurahNumber));
+      if (surah && surah.ayahs && this.state.currentAyahIndex + 1 < surah.ayahs.length) {
+        this.playAyah(this.state.currentSurahNumber, this.state.currentAyahIndex + 1);
       } else {
         this.setAudioPlayState(false);
       }
     },
 
     playNextAyah() {
-      const surah = window.MIRATH_DATA.quran[this.state.currentSurahIndex];
-      if (this.state.currentAyahIndex + 1 < surah.ayahs.length) {
-        this.playAyah(this.state.currentSurahIndex, this.state.currentAyahIndex + 1);
+      const surah = (this.loadedSurahs && this.loadedSurahs[this.state.currentSurahNumber]) || (window.MIRATH_DATA.quran && window.MIRATH_DATA.quran.find(s => s.surahNumber === this.state.currentSurahNumber));
+      if (surah && surah.ayahs && this.state.currentAyahIndex + 1 < surah.ayahs.length) {
+        this.playAyah(this.state.currentSurahNumber, this.state.currentAyahIndex + 1);
       }
     },
 
     playPrevAyah() {
       if (this.state.currentAyahIndex > 0) {
-        this.playAyah(this.state.currentSurahIndex, this.state.currentAyahIndex - 1);
+        this.playAyah(this.state.currentSurahNumber, this.state.currentAyahIndex - 1);
       }
     },
 
@@ -1124,7 +1456,32 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       }
 
-      // 1. Search Quran
+      // 0. Search All 114 Qur'an Chapters
+      if (window.MIRATH_SURAHS) {
+        window.MIRATH_SURAHS.forEach(s => {
+          const numStr = String(s.number);
+          if (
+            s.nameEnglish.toLowerCase().includes(q) ||
+            s.nameArabic.includes(q) ||
+            s.translation.toLowerCase().includes(q) ||
+            q === numStr ||
+            q === `surah ${numStr}` ||
+            q === `surah ${s.nameEnglish.toLowerCase()}`
+          ) {
+            results.push({
+              category: 'Qur’an Chapter',
+              title: `Surah ${s.number}. ${s.nameEnglish} (${s.nameArabic})`,
+              snippet: `${s.translation} • ${s.numberOfAyahs} Ayahs • ${s.revelationType}`,
+              action: () => {
+                this.closeSearchModal();
+                this.selectSurah(s.number);
+              }
+            });
+          }
+        });
+      }
+
+      // 1. Search Quran (Ayahs)
       window.MIRATH_DATA.quran.forEach((surah, sIdx) => {
         surah.ayahs.forEach((ayah, aIdx) => {
           if (ayah.translation.toLowerCase().includes(q) || ayah.transliteration.toLowerCase().includes(q) || ayah.arabic.includes(q)) {
