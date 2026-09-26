@@ -10,51 +10,59 @@ An authentic, all-in-one Islamic library crafted with a luxury **Gold & Obsidian
 ## 🌟 Key Features
 
 1. **🏛️ Overview Hub**: Daily Ayah & Hadith spotlight, quick stats, and direct links to all 10 repositories.
-2. **📖 Qur’an & Hifdh Studio**: Uthmani Arabic script, English translations, Mishary Rashid Alafasy audio recitations, interactive **Word Masking**, **Translation Blurring**, and **Loop Repetitions** (1x, 3x, 5x, 10x).
-3. **📜 Hadith Treasury**: Sahih al-Bukhari and Sahih Muslim traditions with authenticity grades, narrator chains, scholarly insights, one-click copy, and bookmarking.
-4. **🤲 Duas & Daily Adhkar**: Fortress of the Muslim (*Hisn al-Muslim*) supplications with target repetition counters, virtues, and direct **"Counter"** button to load into the Tasbih.
-5. **📿 Tactile Digital Tasbih**: Interactive Dhikr ring with circular gold SVG progress bar, Web Audio harmonic chime on each bead, haptic vibration support, and 8 authentic Dhikr presets.
-6. **🌙 Seerah Timeline**: Chronological historical milestones of Prophet Muhammad ﷺ from 570 CE to 632 CE.
-7. **✨ Stories of the Prophets**: Detailed chronicles of Adam, Ibrahim, Yusuf, Musa, and Isa (عليهم السلام) with Qur’anic citations.
-8. **⚔️ The Noble Sahabah**: Biographies, sacrifices, and inspiring sayings of the Rightly Guided Caliphs and Companions (رضي الله عنهم).
-9. **🕋 Aqeedah & Practical Fiqh**: The 6 Pillars of Iman and illustrated step-by-step guides for Wudu and Salah.
-10. **⚖️ Zakat & Nisab Calculator**: Real-time 2.5% calculation on cash, gold, silver, shares, and liabilities with live Nisab threshold comparison.
-11. **💎 Scholar Wisdom**: Reflections from classical luminaries (Imam ash-Shafi'i, Hasan al-Basri, Ibn al-Qayyim, Imam Ahmad).
-12. **🏆 Interactive Islamic Quiz**: Multi-choice knowledge challenges with instant explanations, references, score tracking, and replay.
-13. **✍️ Contributor Studio & Editor**: Dedicated in-app dashboard to add, manage, and delete custom entries across all categories, with 1-click `data.js` and `.json` export/import, plus optional Supabase cloud sync!
-14. **🔍 Universal Search**: Instant global modal accessible via `Ctrl + K` or `/`.
-15. **🔖 Bookmarks System**: Save any Ayah, Hadith, Dua, or Quote to local storage.
-16. **🎧 Floating Audio Player**: Persistent bar with time tracker, previous/next controls, and repeat looping.
+2. **📖 Complete 114 Qur’an Chapters & Hifdh Studio**: Full Uthmani Arabic script for all 114 Surahs, Saheeh International English translations, Mishary Rashid Alafasy audio recitations, interactive **Word Masking**, **Translation Blurring**, and **Loop Repetitions** (1x, 3x, 5x, 10x).
+3. **🏛️ 114 Surahs Directory & Search**: Comprehensive directory grid with search by name/number, revelation filters (Meccan/Medinan), and 1-click reader launch.
+4. **📜 Hadith Treasury**: Sahih al-Bukhari and Sahih Muslim traditions with authenticity grades, narrator chains, scholarly insights, one-click copy, and bookmarking.
+5. **🤲 Duas & Daily Adhkar**: Fortress of the Muslim (*Hisn al-Muslim*) supplications with target repetition counters, virtues, and direct **"Counter"** button to load into the Tasbih.
+6. **📿 Tactile Digital Tasbih**: Interactive Dhikr ring with circular gold SVG progress bar, Web Audio harmonic chime on each bead, haptic vibration support, and 8 authentic Dhikr presets.
+7. **🌙 Seerah Timeline**: Chronological historical milestones of Prophet Muhammad ﷺ from 570 CE to 632 CE.
+8. **✨ Stories of the Prophets**: Detailed chronicles of Adam, Ibrahim, Yusuf, Musa, and Isa (عليهم السلام) with Qur’anic citations.
+9. **⚔️ The Noble Sahabah**: Biographies, sacrifices, and inspiring sayings of the Rightly Guided Caliphs and Companions (رضي الله عنهم).
+10. **🕋 Aqeedah & Practical Fiqh**: The 6 Pillars of Iman and illustrated step-by-step guides for Wudu and Salah.
+11. **⚖️ Zakat & Nisab Calculator**: Real-time 2.5% calculation on cash, gold, silver, shares, and liabilities with live Nisab threshold comparison.
+12. **💎 Scholar Wisdom**: Reflections from classical luminaries (Imam ash-Shafi'i, Hasan al-Basri, Ibn al-Qayyim, Imam Ahmad).
+13. **🏆 Interactive Islamic Quiz**: Multi-choice knowledge challenges with instant explanations, references, score tracking, and replay.
+14. **✍️ Contributor Studio & Editor**: Dedicated in-app dashboard to add, manage, and delete custom entries across all categories, with 1-click `data.js` and `.json` export/import, plus optional Supabase cloud sync!
+15. **🔍 Universal Search**: Instant global modal accessible via `Ctrl + K` or `/` searching across all 114 Surahs, Hadiths, Duas, Stories, and Quotes.
+16. **🔖 Bookmarks System**: Save any Ayah, Hadith, Dua, or Quote to local storage.
+17. **🎧 Floating Audio Player**: Persistent bar with time tracker, previous/next controls, and repeat looping.
 
 ---
 
-## 🚀 How to Deploy Online (Free in Under 2 Minutes)
+## 🎓 GitHub Student Pack Deployment Guide
 
-Mirath is a modern, high-performance static web application requiring zero build steps or server configurations. You can host it for free with automatic SSL:
+With your **GitHub Student Developer Pack**, you get free access to GitHub Pro, unlimited GitHub Pages with automated GitHub Actions, and free custom domains from Namecheap or .TECH!
 
-### Option 1: Netlify Drag & Drop (Fastest — 30 Seconds)
-1. Go to [app.netlify.com/drop](https://app.netlify.com/drop) (sign in or create a free account).
-2. Drag and drop the `Mirath` project folder onto the page.
-3. Your website is instantly live with a free HTTPS URL like `https://mirath-treasury.netlify.app`!
+### Step 1: Create the GitHub Repository & Push
 
-### Option 2: GitHub Pages (Free Forever)
-1. Initialize and push this repository to GitHub:
-   ```bash
-   git add .
-   git commit -m "feat: complete Mirath sacred islamic treasury"
-   git branch -M main
-   # Replace with your GitHub repository URL:
-   git remote add origin https://github.com/YOUR_USERNAME/Mirath.git
-   git push -u origin main
-   ```
-2. On GitHub, go to **Settings** → **Pages** (in the left sidebar).
-3. Under **Build and deployment** → **Branch**, select `main` and `/ (root)`, then click **Save**.
-4. In ~60 seconds, your website will be live at `https://YOUR_USERNAME.github.io/Mirath/`!
+Run the automated helper script in your terminal:
+```bash
+./deploy.sh
+```
 
-### Option 3: Vercel (1-Click)
-1. Install Vercel CLI (`npm i -g vercel`) or visit [vercel.com/new](https://vercel.com/new).
-2. Select your GitHub repository or run `vercel` in this folder.
-3. Your site will be deployed globally in seconds!
+Or run via GitHub CLI (`gh`):
+```bash
+gh auth login
+gh repo create Mirath --public --source=. --remote=origin --push
+```
+
+### Step 2: Automatic GitHub Pages Deployment (Free SSL)
+
+The repository already includes `.github/workflows/deploy.yml` and `.nojekyll`.
+1. On GitHub, navigate to: `https://github.com/umer6016/Mirath/settings/pages`
+2. Under **Build and deployment** → **Source**, select **GitHub Actions**.
+3. Every push to `main` automatically deploys the website to:
+   `https://umer6016.github.io/Mirath/`
+
+### Step 3: Claim Your Free Custom Domain (GitHub Student Pack Perk)
+1. Go to the [GitHub Student Developer Pack benefits](https://education.github.com/pack).
+2. Claim your free 1-year domain name from **Namecheap** (`.me`) or **.TECH** (e.g., `mirath-library.me`).
+3. In `https://github.com/umer6016/Mirath/settings/pages`, type your custom domain under **Custom domain** and check **Enforce HTTPS**.
+4. GitHub will automatically provision free HTTPS certificates!
+
+### Alternative Deployments:
+- **Vercel**: Import `umer6016/Mirath` at [vercel.com/new](https://vercel.com/new) for instant global edge deployment.
+- **Netlify**: Connect repository at [app.netlify.com](https://app.netlify.com) for automated deployment on push.
 
 ---
 
