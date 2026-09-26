@@ -57,6 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
       this.renderAll();
       this.renderSurahDirectory();
       this.calculateZakat();
+      this.onQiblaCitySelected('karachi');
       this.updateAdminLockUI();
       this.applyNavVisibility();
       this.renderAdminCustomList();
@@ -1014,6 +1015,202 @@ document.addEventListener('DOMContentLoaded', () => {
         osc.stop(this.audioContext.currentTime + 0.1);
       } catch (e) {
         // Audio synthesis fallback
+      }
+    },
+
+    // =========================================================================
+    // INTERACTIVE GOLDEN QIBLA COMPASS
+    // =========================================================================
+    qiblaCities: {
+      karachi: { name: 'Karachi, Pakistan', lat: 24.8607, lng: 67.0011 },
+      lahore: { name: 'Lahore, Pakistan', lat: 31.5204, lng: 74.3587 },
+      islamabad: { name: 'Islamabad, Pakistan', lat: 33.6844, lng: 73.0479 },
+      makkah: { name: 'Makkah al-Mukarramah', lat: 21.4225, lng: 39.8262 },
+      madinah: { name: 'Madinah al-Munawwarah', lat: 24.5247, lng: 39.5692 },
+      jerusalem: { name: 'Jerusalem (Al-Quds)', lat: 31.7683, lng: 35.2137 },
+      cairo: { name: 'Cairo, Egypt', lat: 30.0444, lng: 31.2357 },
+      istanbul: { name: 'Istanbul, Turkey', lat: 41.0082, lng: 28.9784 },
+      dubai: { name: 'Dubai, UAE', lat: 25.2048, lng: 55.2708 },
+      riyadh: { name: 'Riyadh, Saudi Arabia', lat: 24.7136, lng: 46.6753 },
+      london: { name: 'London, UK', lat: 51.5074, lng: -0.1278 },
+      paris: { name: 'Paris, France', lat: 48.8566, lng: 2.3522 },
+      berlin: { name: 'Berlin, Germany', lat: 52.5200, lng: 13.4050 },
+      newyork: { name: 'New York, USA', lat: 40.7128, lng: -74.0060 },
+      toronto: { name: 'Toronto, Canada', lat: 43.6532, lng: -79.3832 },
+      chicago: { name: 'Chicago, USA', lat: 41.8781, lng: -87.6298 },
+      losangeles: { name: 'Los Angeles, USA', lat: 34.0522, lng: -118.2437 },
+      houston: { name: 'Houston, USA', lat: 29.7604, lng: -95.3698 },
+      jakarta: { name: 'Jakarta, Indonesia', lat: -6.2088, lng: 106.8456 },
+      kualalumpur: { name: 'Kuala Lumpur, Malaysia', lat: 3.1390, lng: 101.6869 },
+      dhaka: { name: 'Dhaka, Bangladesh', lat: 23.8103, lng: 90.4125 },
+      mumbai: { name: 'Mumbai, India', lat: 19.0760, lng: 72.8777 },
+      delhi: { name: 'Delhi, India', lat: 28.6139, lng: 77.2090 },
+      sydney: { name: 'Sydney, Australia', lat: -33.8688, lng: 151.2093 },
+      melbourne: { name: 'Melbourne, Australia', lat: -37.8136, lng: 144.9631 },
+      tokyo: { name: 'Tokyo, Japan', lat: 35.6762, lng: 139.6503 },
+      johannesburg: { name: 'Johannesburg, South Africa', lat: -26.2041, lng: 28.0473 },
+      casablanca: { name: 'Casablanca, Morocco', lat: 33.5731, lng: -7.5898 },
+      tashkent: { name: 'Tashkent, Uzbekistan', lat: 41.2995, lng: 69.2401 }
+    },
+
+    calculateQiblaBearing(lat, lng) {
+      const KAABA_LAT = 21.422487;
+      const KAABA_LNG = 39.826206;
+      const phi1 = (lat * Math.PI) / 180;
+      const phi2 = (KAABA_LAT * Math.PI) / 180;
+      const deltaLambda = ((KAABA_LNG - lng) * Math.PI) / 180;
+
+      const y = Math.sin(deltaLambda) * Math.cos(phi2);
+      const x = Math.cos(phi1) * Math.sin(phi2) - Math.sin(phi1) * Math.cos(phi2) * Math.cos(deltaLambda);
+      let bearing = (Math.atan2(y, x) * 180) / Math.PI;
+      bearing = (bearing + 360) % 360;
+
+      // Haversine distance
+      const dLat = ((KAABA_LAT - lat) * Math.PI) / 180;
+      const dLng = ((KAABA_LNG - lng) * Math.PI) / 180;
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(phi1) * Math.cos(phi2) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      const distKm = 6371 * c;
+
+      return { bearing, distKm };
+    },
+
+    getCardinalDirection(deg) {
+      const directions = [
+        'North (N)', 'North-Northeast (NNE)', 'Northeast (NE)', 'East-Northeast (ENE)',
+        'East (E)', 'East-Southeast (ESE)', 'Southeast (SE)', 'South-Southeast (SSE)',
+        'South (S)', 'South-Southwest (SSW)', 'Southwest (SW)', 'West-Southwest (WSW)',
+        'West (W)', 'West-Northwest (WNW)', 'Northwest (NW)', 'North-Northwest (NNW)'
+      ];
+      const index = Math.round(deg / 22.5) % 16;
+      return directions[index];
+    },
+
+    updateQiblaDisplay(bearing, distKm, locationName, lat, lng) {
+      this.state.qiblaTrueBearing = bearing;
+      const needle = document.getElementById('qiblaNeedle');
+      if (needle) {
+        needle.style.transform = `rotate(${bearing.toFixed(1)}deg)`;
+      }
+
+      const bearingVal = document.getElementById('qiblaBearingValue');
+      if (bearingVal) bearingVal.innerText = `${bearing.toFixed(1)}°`;
+
+      const cardinal = document.getElementById('qiblaCardinal');
+      if (cardinal) cardinal.innerText = this.getCardinalDirection(bearing);
+
+      const distKmEl = document.getElementById('qiblaDistanceKm');
+      if (distKmEl) distKmEl.innerText = `${Math.round(distKm).toLocaleString()} km`;
+
+      const distMiEl = document.getElementById('qiblaDistanceMi');
+      if (distMiEl) distMiEl.innerText = `(${Math.round(distKm * 0.621371).toLocaleString()} miles)`;
+
+      const locName = document.getElementById('qiblaLocationName');
+      if (locName) {
+        locName.innerHTML = `<span>${locationName}</span><span class="text-[10px] px-2 py-0.5 rounded bg-emerald-950/40 text-emerald-300 border border-emerald-500/30">Active</span>`;
+      }
+
+      const coordsEl = document.getElementById('qiblaCoordinates');
+      if (coordsEl) {
+        const latStr = lat >= 0 ? `${lat.toFixed(4)}° N` : `${Math.abs(lat).toFixed(4)}° S`;
+        const lngStr = lng >= 0 ? `${lng.toFixed(4)}° E` : `${Math.abs(lng).toFixed(4)}° W`;
+        coordsEl.innerText = `${latStr}, ${lngStr}`;
+      }
+    },
+
+    onQiblaCitySelected(cityKey) {
+      const city = this.qiblaCities[cityKey];
+      if (!city) return;
+      const { bearing, distKm } = this.calculateQiblaBearing(city.lat, city.lng);
+      this.updateQiblaDisplay(bearing, distKm, city.name, city.lat, city.lng);
+    },
+
+    geolocateQibla() {
+      const btn = document.getElementById('btnQiblaGeolocate');
+      if (!navigator.geolocation) {
+        alert('Geolocation is not supported by your browser. Please select a nearby city from the dropdown.');
+        return;
+      }
+
+      if (btn) {
+        btn.innerHTML = `<svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"></circle><path fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" class="opacity-75"></path></svg><span>Acquiring GPS...</span>`;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          const { bearing, distKm } = this.calculateQiblaBearing(lat, lng);
+          this.updateQiblaDisplay(bearing, distKm, 'My Live Location (GPS)', lat, lng);
+          if (btn) {
+            btn.innerHTML = `<svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span>Location Updated ✓</span>`;
+          }
+        },
+        (err) => {
+          if (btn) {
+            btn.innerHTML = `<svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span>Use My Live Location (GPS)</span>`;
+          }
+          alert('Could not retrieve your live location (' + err.message + '). Please select your city from the dropdown.');
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      );
+    },
+
+    toggleDeviceCompass() {
+      const btn = document.getElementById('btnQiblaSensor');
+      if (this._deviceCompassActive) {
+        window.removeEventListener('deviceorientation', this._deviceOrientationHandler);
+        this._deviceCompassActive = false;
+        if (btn) {
+          btn.innerHTML = `<svg class="w-4 h-4 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg><span>Enable Mobile Gyro / Compass Sensor</span>`;
+        }
+        const needle = document.getElementById('qiblaNeedle');
+        if (needle && this.state.qiblaTrueBearing !== undefined) {
+          needle.style.transform = `rotate(${this.state.qiblaTrueBearing.toFixed(1)}deg)`;
+        }
+        return;
+      }
+
+      const startListening = () => {
+        this._deviceOrientationHandler = (e) => {
+          let compassHeading = null;
+          if (e.webkitCompassHeading !== undefined) {
+            compassHeading = e.webkitCompassHeading;
+          } else if (e.alpha !== null) {
+            compassHeading = 360 - e.alpha;
+          }
+
+          if (compassHeading !== null) {
+            const needle = document.getElementById('qiblaNeedle');
+            const targetBearing = this.state.qiblaTrueBearing || 267.7;
+            const needleAngle = (targetBearing - compassHeading + 360) % 360;
+            if (needle) {
+              needle.style.transform = `rotate(${needleAngle.toFixed(1)}deg)`;
+            }
+          }
+        };
+
+        window.addEventListener('deviceorientation', this._deviceOrientationHandler);
+        this._deviceCompassActive = true;
+        if (btn) {
+          btn.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping mr-1"></span><span class="text-emerald-300 font-bold">Gyro Active (Rotate Phone) • Click to Stop</span>`;
+        }
+      };
+
+      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        DeviceOrientationEvent.requestPermission()
+          .then(permissionState => {
+            if (permissionState === 'granted') {
+              startListening();
+            } else {
+              alert('Permission to access device orientation was denied.');
+            }
+          })
+          .catch(console.error);
+      } else if ('ondeviceorientation' in window) {
+        startListening();
+      } else {
+        alert('Device orientation sensors are not supported on this device/browser.');
       }
     },
 

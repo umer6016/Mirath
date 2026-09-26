@@ -325,3 +325,43 @@ body {
 input[type=range] {
   accent-color: var(--gold-primary);
 }
+
+/* Qibla Compass Luxury Styling */
+.compass-housing {
+  position: relative;
+  width: 280px;
+  height: 280px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: radial-gradient(circle, #1a1e28 0%, #0d0f15 70%, #08090d 100%);
+  border: 4px solid var(--gold-primary);
+  box-shadow: 0 0 35px rgba(212, 175, 55, 0.25), inset 0 0 30px rgba(0, 0, 0, 0.9);
+}
+
+@media (min-width: 640px) {
+  .compass-housing {
+    width: 320px;
+    height: 320px;
+  }
+}
+
+.compass-dial-plate {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.compass-needle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 220px;
+  margin-top: -110px;
+  margin-left: -4px;
+  transform-origin: center center;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
