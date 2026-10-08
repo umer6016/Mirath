@@ -84,27 +84,6 @@ const MIRATH_DATA = {
       ]
     },
     {
-      id: "kursi",
-      surahNumber: 2,
-      nameArabic: "آية الكرسي",
-      nameEnglish: "Ayat al-Kursi (Al-Baqarah 255)",
-      translation: "The Throne Verse",
-      revelationType: "Medinan",
-      totalVerses: 1,
-      bismillah: true,
-      ayahs: [
-        {
-          numberInSurah: 255,
-          globalNumber: 262,
-          arabic: "ٱللَّهُ لَآ إِلَٰهَ إِلَّا هُوَ ٱلْحَىُّ ٱلْقَيُّومُ ۚ لَا تَأْخُذُهُۥ سِنَةٌ وَلَا نَوْمٌ ۚ لَّهُۥ مَا فِى ٱلسَّمَٰوَٰتِ وَمَا فِى ٱلْأَرْضِ ۗ مَن ذَا ٱلَّذِى يَشْفَعُ عِندَهُۥٓ إِلَّا بِإِذْنِهِۦ ۚ يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ ۖ وَلَا يُحِيطُونَ بِشَىْءٍ مِّنْ عِلْمِهِۦٓ إِلَّا بِمَا شَآءَ ۚ وَسِعَ كُرْسِيُّهُ ٱلسَّمَٰوَٰتِ وَٱلْأَرْضَ ۖ وَلَا يَـُٔودُهُۥ حِفْظُهُمَا ۚ وَهُوَ ٱلْعَلِىُّ ٱلْعَظِيمُ",
-          transliteration: "Allāhu lā ilāha illā huwal-Ḥayyul-Qayyūm, lā ta'khudhuhū sinatuw-walā nawm, lahū mā fis-samāwāti wamā fil-arḍ, man dhal-ladhī yashfa'u 'indahū illā bi-idhnih, ya'lamu mā bayna aydīhim wamā khalfahum, walā yuḥīṭūna bi-shay'im-min 'ilmihī illā bimā shā', wasi'a kursiyyuhus-samāwāti wal-arḍ, walā ya'ūduhū ḥifẓuhumā, wahuwal-'Aliyyul-'Aẓīm.",
-          translation: "Allah - there is no deity except Him, the Ever-Living, the Sustainer of [all] existence. Neither drowsiness overtakes Him nor sleep. To Him belongs whatever is in the heavens and whatever is on the earth. Who is it that could intercede with Him except by His permission? He knows what is [presently] before them and what will be after them, and they encompass not a thing of His knowledge except for what He wills. His Kursi extends over the heavens and the earth, and their preservation tires Him not. And He is the Most High, the Most Great.",
-          audio: "https://cdn.islamic.network/quran/audio/128/ar.alafasy/262.mp3",
-          words: ["ٱللَّهُ", "لَآ إِلَٰهَ", "إِلَّا هُوَ", "ٱلْحَىُّ", "ٱلْقَيُّومُ", "لَا تَأْخُذُهُۥ", "سِنَةٌ", "وَلَا نَوْمٌ", "لَّهُۥ مَا فِى ٱلسَّمَٰوَٰتِ", "وَمَا فِى ٱلْأَرْضِ", "مَن ذَا ٱلَّذِى", "يَشْفَعُ عِندَهُۥٓ", "إِلَّا بِإِذْنِهِۦ", "يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ", "وَمَا خَلْفَهُمْ", "وَلَا يُحِيطُونَ", "بِشَىْءٍ مِّنْ عِلْمِهِۦٓ", "إِلَّا بِمَا شَآءَ", "وَسِعَ كُرْسِيُّهُ", "ٱلسَّمَٰوَٰتِ وَٱلْأَرْضَ", "وَلَا يَـُٔودُهُۥ", "حِفْظُهُمَا", "وَهُوَ", "ٱلْعَلِىُّ ٱلْعَظِيمُ"]
-        }
-      ]
-    },
-    {
       id: "ikhlas",
       surahNumber: 112,
       nameArabic: "الإخلاص",
@@ -272,45 +251,6 @@ const MIRATH_DATA = {
           translation: "From among the jinn and mankind.'",
           audio: "https://cdn.islamic.network/quran/audio/128/ar.alafasy/6236.mp3",
           words: ["مِنَ", "ٱلْجِنَّةِ", "وَٱلنَّاسِ"]
-        }
-      ]
-    },
-    {
-      id: "mulk",
-      surahNumber: 67,
-      nameArabic: "الملك",
-      nameEnglish: "Al-Mulk (Verses 1-4)",
-      translation: "The Sovereignty / Dominion",
-      revelationType: "Meccan",
-      totalVerses: 4,
-      bismillah: true,
-      ayahs: [
-        {
-          numberInSurah: 1,
-          globalNumber: 5242,
-          arabic: "تَبَٰرَكَ ٱلَّذِى بِيَدِهِ ٱلْمُلْكُ وَهُوَ عَلَىٰ كُلِّ شَىْءٍ قَدِيرٌ",
-          transliteration: "Tabārakal-ladhī biyadihil-mulku wahuwa 'alā kulli shay'in qadīr",
-          translation: "Blessed is He in whose hand is dominion, and He is over all things competent -",
-          audio: "https://cdn.islamic.network/quran/audio/128/ar.alafasy/5242.mp3",
-          words: ["تَبَٰرَكَ", "ٱلَّذِى", "بِيَدِهِ", "ٱلْمُلْكُ", "وَهُوَ", "عَلَىٰ", "كُلِّ", "شَىْءٍ", "قَدِيرٌ"]
-        },
-        {
-          numberInSurah: 2,
-          globalNumber: 5243,
-          arabic: "ٱلَّذِى خَلَقَ ٱلْمَوْتَ وَٱلْحَيَوٰةَ لِيَبْلُوَكُمْ أَيُّكُمْ أَحْسَنُ عَمَلًا ۚ وَهُوَ ٱلْعَزِيزُ ٱلْغَفُورُ",
-          transliteration: "Al-ladhī khalaqal-mawta wal-ḥayāta liyabluwakum ayyukum aḥsanu 'amalā, wahuwal-'Azīzul-Ghafūr",
-          translation: "[He] who created death and life to test you [as to] which of you is best in deed - and He is the Exalted in Might, the Forgiving -",
-          audio: "https://cdn.islamic.network/quran/audio/128/ar.alafasy/5243.mp3",
-          words: ["ٱلَّذِى", "خَلَقَ", "ٱلْمَوْتَ", "وَٱلْحَيَوٰةَ", "لِيَبْلُوَكُمْ", "أَيُّكُمْ", "أَحْسَنُ", "عَمَلًا", "وَهُوَ", "ٱلْعَزِيزُ", "ٱلْغَفُورُ"]
-        },
-        {
-          numberInSurah: 3,
-          globalNumber: 5244,
-          arabic: "ٱلَّذِى خَلَقَ سَبْعَ سَمَٰوَٰتٍ طِبَاقًا ۖ مَّا تَرَىٰ فِى خَلْقِ ٱلرَّحْمَٰنِ مِن تَفَٰوُتٍ ۖ فَٱرْجِعِ ٱلْبَصَرَ هَلْ تَرَىٰ مِن فُطُورٍ",
-          transliteration: "Al-ladhī khalaqa sab'a samāwātin ṭibāqam-mā tarā fī khalqir-Raḥmāni min tafāwutin farji'il-baṣara hal tarā min fuṭūr",
-          translation: "[And] who created seven heavens in layers. You see no flaw in the creation of the Most Merciful. Then look again: can you see any break?",
-          audio: "https://cdn.islamic.network/quran/audio/128/ar.alafasy/5244.mp3",
-          words: ["ٱلَّذِى", "خَلَقَ", "سَبْعَ", "سَمَٰوَٰتٍ", "طِبَاقًا", "مَّا تَرَىٰ", "فِى خَلْقِ", "ٱلرَّحْمَٰنِ", "مِن تَفَٰوُتٍ", "فَٱرْجِعِ", "ٱلْبَصَرَ", "هَلْ تَرَىٰ", "مِن فُطُورٍ"]
         }
       ]
     }

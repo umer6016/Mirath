@@ -58,6 +58,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async init() {
       localStorage.removeItem('mirath_admin_pin');
+      // Purge any stale/incomplete surah cache from previous sessions (e.g. 1-verse Al-Baqarah)
+      for (let i = 1; i <= 114; i++) {
+        try {
+          const cached = localStorage.getItem('mirath_surah_' + i);
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            const meta = window.MIRATH_SURAHS && window.MIRATH_SURAHS.find(s => s.number === i);
+            if (meta && (!parsed.ayahs || parsed.ayahs.length < meta.numberOfAyahs)) {
+              localStorage.removeItem('mirath_surah_' + i);
+            }
+          }
+        } catch (_) {}
+      }
       this.cacheElements();
       this.initSurahsCache();
       await this.loadCustomData();
@@ -242,7 +255,10 @@ document.addEventListener('DOMContentLoaded', () => {
       this.loadedSurahs = {};
       if (window.MIRATH_DATA && window.MIRATH_DATA.quran) {
         window.MIRATH_DATA.quran.forEach(s => {
-          this.loadedSurahs[s.surahNumber] = s;
+          const meta = window.MIRATH_SURAHS && window.MIRATH_SURAHS.find(m => m.number === s.surahNumber);
+          if (!meta || (s.ayahs && s.ayahs.length >= meta.numberOfAyahs)) {
+            this.loadedSurahs[s.surahNumber] = s;
+          }
         });
       }
     },
@@ -381,44 +397,50 @@ document.addEventListener('DOMContentLoaded', () => {
     },
 
     async getSurah(surahNumber) {
-      // 1. Memory check
-      if (this.loadedSurahs && this.loadedSurahs[surahNumber]) {
-        return this.loadedSurahs[surahNumber];
-      }
-
-      // 2. Pre-packaged check
-      if (window.MIRATH_DATA && window.MIRATH_DATA.quran) {
-        const found = window.MIRATH_DATA.quran.find(s => s.surahNumber === surahNumber);
-        if (found) {
-          this.loadedSurahs[surahNumber] = found;
-          return found;
-        }
-      }
-
-      // 3. LocalStorage cache check
-      try {
-        const cached = localStorage.getItem('mirath_surah_' + surahNumber);
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          if (parsed && parsed.ayahs && parsed.ayahs.length) {
-            this.loadedSurahs[surahNumber] = parsed;
-            return parsed;
-          }
-        }
-      } catch (e) {}
-
-      // 4. Fetch from AlQuran Cloud API
-      const meta = (window.MIRATH_SURAHS && window.MIRATH_SURAHS.find(s => s.number === surahNumber)) || {
-        number: surahNumber,
+      const num = parseInt(surahNumber, 10);
+      const meta = (window.MIRATH_SURAHS && window.MIRATH_SURAHS.find(s => s.number === num)) || {
+        number: num,
         nameArabic: '',
-        nameEnglish: 'Surah ' + surahNumber,
+        nameEnglish: 'Surah ' + num,
         translation: '',
         numberOfAyahs: 0,
         revelationType: 'Meccan'
       };
 
-      const resp = await fetch(`https://api.alquran.cloud/v1/surah/${surahNumber}/editions/quran-uthmani,en.sahih`);
-      if (!resp.ok) throw new Error('Network error loading Surah ' + surahNumber);
+      // 1. Memory check (must have full ayahs)
+      if (this.loadedSurahs && this.loadedSurahs[num]) {
+        const cached = this.loadedSurahs[num];
+        if (cached && cached.ayahs && (!meta.numberOfAyahs || cached.ayahs.length >= meta.numberOfAyahs)) {
+          return cached;
+        }
+      }
+
+      // 2. Pre-packaged check (must have full ayahs)
+      if (window.MIRATH_DATA && window.MIRATH_DATA.quran) {
+        const found = window.MIRATH_DATA.quran.find(s => s.surahNumber === num);
+        if (found && found.ayahs && (!meta.numberOfAyahs || found.ayahs.length >= meta.numberOfAyahs)) {
+          this.loadedSurahs[num] = found;
+          return found;
+        }
+      }
+
+      // 3. LocalStorage cache check (must have full ayahs)
+      try {
+        const cached = localStorage.getItem('mirath_surah_' + num);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed && parsed.ayahs && (!meta.numberOfAyahs || parsed.ayahs.length >= meta.numberOfAyahs)) {
+            this.loadedSurahs[num] = parsed;
+            return parsed;
+          } else {
+            localStorage.removeItem('mirath_surah_' + num);
+          }
+        }
+      } catch (e) {}
+
+      // 4. Fetch from AlQuran Cloud API
+      const resp = await fetch(`https://api.alquran.cloud/v1/surah/${num}/editions/quran-uthmani,en.sahih`);
+      if (!resp.ok) throw new Error('Network error loading Surah ' + num);
       const json = await resp.json();
       if (!json || json.code !== 200 || !json.data || json.data.length < 2) {
         throw new Error('Invalid response from Quran API');
@@ -430,7 +452,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const ayahs = arData.ayahs.map((arAyah, idx) => {
         const enAyah = enData.ayahs[idx] || { text: '' };
         let arText = arAyah.text || '';
-        if (surahNumber !== 1 && surahNumber !== 9 && idx === 0 && arText.startsWith('بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ')) {
+        if (num !== 1 && num !== 9 && idx === 0 && arText.startsWith('بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ')) {
           arText = arText.replace(/^بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ\s*/, '').trim();
         }
         const words = arText.split(/\s+/).filter(Boolean);
@@ -446,20 +468,20 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       const surahObj = {
-        id: 'surah-' + surahNumber,
-        surahNumber: surahNumber,
+        id: 'surah-' + num,
+        surahNumber: num,
         nameArabic: meta.nameArabic || arData.name,
         nameEnglish: meta.nameEnglish || arData.englishName,
         translation: meta.translation || arData.englishNameTranslation,
         revelationType: meta.revelationType || arData.revelationType,
         totalVerses: meta.numberOfAyahs || ayahs.length,
-        bismillah: surahNumber !== 1 && surahNumber !== 9,
+        bismillah: num !== 1 && num !== 9,
         ayahs: ayahs
       };
 
-      this.loadedSurahs[surahNumber] = surahObj;
+      this.loadedSurahs[num] = surahObj;
       try {
-        localStorage.setItem('mirath_surah_' + surahNumber, JSON.stringify(surahObj));
+        localStorage.setItem('mirath_surah_' + num, JSON.stringify(surahObj));
       } catch (e) {}
       return surahObj;
     },
@@ -469,7 +491,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const selector = document.getElementById('surahSelectDropdown');
       if (!container) return;
 
-      const surahNumber = this.state.currentSurahNumber || 1;
+      const surahNumber = parseInt(this.state.currentSurahNumber || 1, 10);
 
       // Populate selector dropdown with all 114 Surahs if not done
       if (selector && (selector.children.length <= 1 || selector.children.length < 114)) {
@@ -488,20 +510,24 @@ document.addEventListener('DOMContentLoaded', () => {
         selector.value = surahNumber;
       }
 
-      // Check if data is ready or needs fetching
+      // Check if data is ready and COMPLETE or needs fetching
+      const meta = (window.MIRATH_SURAHS && window.MIRATH_SURAHS.find(s => s.number === surahNumber)) || {
+        nameEnglish: `Surah ${surahNumber}`,
+        nameArabic: '',
+        translation: '',
+        numberOfAyahs: 0
+      };
+
       let currentSurah = this.loadedSurahs && this.loadedSurahs[surahNumber];
-      if (!currentSurah) {
-        const meta = (window.MIRATH_SURAHS && window.MIRATH_SURAHS.find(s => s.number === surahNumber)) || {
-          nameEnglish: `Surah ${surahNumber}`,
-          nameArabic: '',
-          translation: ''
-        };
+      const isComplete = currentSurah && currentSurah.ayahs && (!meta.numberOfAyahs || currentSurah.ayahs.length >= meta.numberOfAyahs);
+
+      if (!isComplete) {
         container.innerHTML = `
           <div class="glass-card p-12 text-center border border-[#D4AF37]/30 my-8">
             <div class="w-16 h-16 mx-auto mb-5 border-4 border-[#D4AF37]/20 border-t-[#D4AF37] rounded-full animate-spin"></div>
             <h3 class="font-serif text-2xl font-bold text-white mb-2">Loading ${meta.nameEnglish}</h3>
             <p class="font-arabic text-xl gold-text mb-4">${meta.nameArabic}</p>
-            <p class="text-xs text-neutral-400">Fetching Uthmani text, Saheeh International translation, and Mishary Alafasy audio...</p>
+            <p class="text-xs text-neutral-400">Fetching all ${meta.numberOfAyahs || ''} verses in Uthmani script, Saheeh International translation, and Mishary Alafasy audio...</p>
           </div>
         `;
         try {
