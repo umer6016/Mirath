@@ -33,10 +33,9 @@ if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
     echo "✓ Repository created and pushed successfully!"
     echo "  Repo URL: https://github.com/umer6016/Mirath"
     echo ""
-    echo "To activate GitHub Pages:"
-    echo "  1. Go to: https://github.com/umer6016/Mirath/settings/pages"
-    echo "  2. Under 'Source', select 'GitHub Actions'"
-    echo "  3. Your site will be live at: https://umer6016.github.io/Mirath/"
+    echo "Site is live at:"
+    echo "  → https://mirath.me"
+    echo "  → https://umer6016.github.io/Mirath/"
     echo "========================================================"
     exit 0
 fi

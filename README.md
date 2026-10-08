@@ -5,6 +5,8 @@
 
 An authentic, all-in-one Islamic library crafted with a luxury **Gold & Obsidian** aesthetic, featuring the Holy Qur’an with recitations and memorisation tools, verified Hadith, Duas & Adhkar, Seerah timeline, Prophetic stories, Sahabah chronicles, Aqeedah, Fiqh, Zakat calculator, interactive quizzes, and an integrated **Contributor Studio**.
 
+**🌐 Live Website:** [https://mirath.me](https://mirath.me) (or [https://umer6016.github.io/Mirath/](https://umer6016.github.io/Mirath/))
+
 ---
 
 ## 🌟 Key Features

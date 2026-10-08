@@ -569,7 +569,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
           <!-- Bismillah if applicable -->
           ${currentSurah.bismillah ? `
-            <div class="text-center py-6 font-arabic text-3xl md:text-4xl gold-text select-none border-b border-neutral-900 mb-6">
+            <div class="text-center py-6 font-arabic quran-text text-3xl md:text-4xl gold-text select-none border-b border-neutral-900 mb-6 leading-[2.6]">
               بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
             </div>
           ` : ''}
@@ -634,11 +634,13 @@ document.addEventListener('DOMContentLoaded', () => {
                   </div>
 
                   <!-- Arabic Ayah Text -->
-                  <div class="font-arabic text-2xl md:text-3xl text-right text-[#F6E27A] mb-4 leading-loose tracking-wide select-none">
+                  <div class="quran-ayah-text font-arabic text-2xl md:text-3xl lg:text-[2.15rem] text-right text-[#F6E27A] mb-5 select-none leading-[2.8]">
                     ${this.state.hifdhWordMask 
                       ? wordsArr.map(w => `<span class="hifdh-masked-word hifdh-mask-active" onclick="this.classList.toggle('hifdh-mask-revealed'); this.classList.toggle('hifdh-mask-active')">${w}</span>`).join(' ')
                       : ayah.arabic}
-                    <span class="inline-block text-[#D4AF37] font-serif text-lg mx-2">۝${this.convertToArabicNumber(ayah.numberInSurah)}</span>
+                    <span class="ayah-number-badge inline-flex items-center justify-center align-middle mx-2 text-[#D4AF37] border border-[#D4AF37]/40 bg-[#D4AF37]/10 rounded-full px-2.5 py-0.5 text-xs font-bold select-none">
+                      <span class="text-xs font-arabic text-[#F6E27A] ml-1">۝</span>${ayah.numberInSurah}
+                    </span>
                   </div>
 
                   <!-- Transliteration if available -->
@@ -858,7 +860,7 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
 
               <!-- Arabic text -->
-              <p class="font-arabic text-xl md:text-2xl text-right text-[#F6E27A] mb-4 leading-loose group-hover:text-white transition-colors">
+              <p class="font-arabic text-xl md:text-2xl text-right text-[#F6E27A] mb-4 leading-[2.5] group-hover:text-white transition-colors">
                 ${h.arabic}
               </p>
 
@@ -929,7 +931,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <h3 class="text-base font-bold text-white mb-3 group-hover:text-[#F6E27A] transition-colors">${d.title}</h3>
 
               <!-- Arabic -->
-              <p class="font-arabic text-xl md:text-2xl text-right text-[#F6E27A] mb-3 leading-loose group-hover:text-white transition-colors">
+              <p class="font-arabic text-xl md:text-2xl text-right text-[#F6E27A] mb-3 leading-[2.5] group-hover:text-white transition-colors">
                 ${d.arabic}
               </p>
 
@@ -1860,7 +1862,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
           <!-- Arabic Box -->
           <div class="p-6 rounded-2xl bg-[#07080c] border border-[#D4AF37]/30 shadow-inner space-y-4">
-            <p class="font-arabic text-2xl sm:text-3xl md:text-4xl text-right text-[#F6E27A] leading-loose select-all font-medium">
+            <p class="font-arabic text-2xl sm:text-3xl md:text-4xl text-right text-[#F6E27A] leading-[2.6] select-all font-medium">
               ${item.arabic}
             </p>
             <div class="flex items-center justify-end gap-2 pt-3 border-t border-neutral-800/80">
@@ -1929,7 +1931,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
           <!-- Arabic Box -->
           <div class="p-6 rounded-2xl bg-[#07080c] border border-[#D4AF37]/30 shadow-inner space-y-4">
-            <p class="font-arabic text-2xl sm:text-3xl md:text-4xl text-right text-[#F6E27A] leading-loose select-all font-medium">
+            <p class="font-arabic text-2xl sm:text-3xl md:text-4xl text-right text-[#F6E27A] leading-[2.6] select-all font-medium">
               ${item.arabic}
             </p>
             <div class="flex items-center justify-end gap-2 pt-3 border-t border-neutral-800/80">
