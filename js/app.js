@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
       adminActiveSubTab: 'hadith',
       adminFilterCategory: 'all',
       adminUnlocked: localStorage.getItem('mirath_admin_auth') === 'true',
-      adminPasscode: localStorage.getItem('mirath_admin_pin') || 'mirath786',
+      adminPasscodeHash: localStorage.getItem('mirath_admin_hash') || '2f8d63c0748355b03107576bac17048321cc893e6fee836a3fa5cc1b3ab959aa',
       hideStudioFromNav: localStorage.getItem('mirath_hide_studio_nav') === 'true',
       cloudSyncConfig: JSON.parse(localStorage.getItem('mirath_cloud_config') || '{"type":"none","url":"","key":""}'),
       customData: {
@@ -57,6 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadedSurahs: {},
 
     async init() {
+      localStorage.removeItem('mirath_admin_pin');
       this.cacheElements();
       this.initSurahsCache();
       await this.loadCustomData();
@@ -2650,13 +2651,97 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     },
 
-    submitAdminUnlock(e) {
+    async hashPasscode(pin) {
+      const salt = 'mirath_sacred_vault:';
+      const text = salt + pin;
+      if (window.crypto && window.crypto.subtle) {
+        try {
+          const msgBuffer = new TextEncoder().encode(text);
+          const hashBuffer = await window.crypto.subtle.digest('SHA-256', msgBuffer);
+          const hashArray = Array.from(new Uint8Array(hashBuffer));
+          return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        } catch (_) {}
+      }
+      return this._sha256Fallback(text);
+    },
+
+    _sha256Fallback(ascii) {
+      function rightRotate(value, amount) {
+        return (value >>> amount) | (value << (32 - amount));
+      }
+      const mathPow = Math.pow;
+      const maxWord = mathPow(2, 32);
+      const lengthProperty = 'length';
+      let i, j;
+      let result = '';
+      const words = [];
+      const asciiBitLength = ascii[lengthProperty] * 8;
+      const hash = [];
+      const k = [];
+      let primeCounter = 0;
+      const isComposite = {};
+      for (let candidate = 2; primeCounter < 64; candidate++) {
+        if (!isComposite[candidate]) {
+          for (i = 0; i < 313; i += candidate) {
+            isComposite[i] = candidate;
+          }
+          hash[primeCounter] = (mathPow(candidate, 0.5) * maxWord) | 0;
+          k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;
+        }
+      }
+      ascii += '\x80';
+      while (ascii[lengthProperty] % 64 - 56) ascii += '\x00';
+      for (i = 0; i < ascii[lengthProperty]; i++) {
+        j = ascii.charCodeAt(i);
+        if (j >> 8) return '';
+        words[i >> 2] |= j << ((3 - i) % 4) * 8;
+      }
+      words[words[lengthProperty]] = ((asciiBitLength / maxWord) | 0);
+      words[words[lengthProperty]] = asciiBitLength;
+      for (j = 0; j < words[lengthProperty];) {
+        const w = words.slice(j, j += 16);
+        const oldHash = hash.slice(0);
+        for (i = 0; i < 64; i++) {
+          const w15 = w[i - 15], w2 = w[i - 2];
+          const a = hash[0], e = hash[4];
+          const temp1 = hash[7]
+            + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))
+            + ((e & hash[5]) ^ ((~e) & hash[6]))
+            + k[i]
+            + (w[i] = (i < 16) ? w[i] : (
+                w[i - 16]
+                + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))
+                + w[i - 7]
+                + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))
+              ) | 0
+            );
+          const temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))
+            + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
+          hash = [(temp1 + temp2) | 0].concat(hash);
+          hash[4] = (hash[4] + temp1) | 0;
+        }
+        for (i = 0; i < 8; i++) {
+          hash[i] = (hash[i] + oldHash[i]) | 0;
+        }
+      }
+      for (i = 0; i < 8; i++) {
+        for (j = 3; j + 1; j--) {
+          const b = (hash[i] >> (j * 8)) & 255;
+          result += ((b < 16) ? 0 : '') + b.toString(16);
+        }
+      }
+      return result;
+    },
+
+    async submitAdminUnlock(e) {
       if (e) e.preventDefault();
       const input = document.getElementById('adminPasscodeInput');
       const errorMsg = document.getElementById('adminLockError');
       const entered = input ? input.value.trim() : '';
+      if (!entered) return;
 
-      if (entered === this.state.adminPasscode) {
+      const enteredHash = await this.hashPasscode(entered);
+      if (enteredHash === this.state.adminPasscodeHash) {
         this.state.adminUnlocked = true;
         localStorage.setItem('mirath_admin_auth', 'true');
         if (errorMsg) errorMsg.classList.add('hidden');
@@ -2683,7 +2768,7 @@ document.addEventListener('DOMContentLoaded', () => {
       this.showToast('Curator Studio locked.');
     },
 
-    changeAdminPasscode(e) {
+    async changeAdminPasscode(e) {
       if (e) e.preventDefault();
       if (!this.state.adminUnlocked) {
         this.showToast('Curator access required!', 'error');
@@ -2695,7 +2780,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const confirmPass = document.getElementById('adminConfirmPasscode')?.value.trim();
       const errorContainer = document.getElementById('adminSecurityMsg');
 
-      if (oldPass !== this.state.adminPasscode) {
+      const oldHash = await this.hashPasscode(oldPass || '');
+      if (oldHash !== this.state.adminPasscodeHash) {
         if (errorContainer) {
           errorContainer.innerHTML = '<span class="text-rose-400">Current passcode is incorrect.</span>';
         }
@@ -2719,8 +2805,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      this.state.adminPasscode = newPass;
-      localStorage.setItem('mirath_admin_pin', newPass);
+      const newHash = await this.hashPasscode(newPass);
+      this.state.adminPasscodeHash = newHash;
+      localStorage.setItem('mirath_admin_hash', newHash);
+      localStorage.removeItem('mirath_admin_pin');
 
       if (document.getElementById('adminOldPasscode')) document.getElementById('adminOldPasscode').value = '';
       if (document.getElementById('adminNewPasscode')) document.getElementById('adminNewPasscode').value = '';

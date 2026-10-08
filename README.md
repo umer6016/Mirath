@@ -71,8 +71,8 @@ The repository already includes `.github/workflows/deploy.yml` and `.nojekyll`.
 We built a dedicated **Contributor Studio & Curator Sanctuary** right inside the website with **Passcode Security Gate & Stealth Mode** so that friends can view the site freely while only you and your fiancée can make changes:
 
 ### 🔒 Curator Security Gate & Permissions:
-- **Protected Access**: Only curators who know the passcode can access the editing studio, add content, or delete entries. Unauthenticated friends and visitors only see the lock screen.
-- **Default Curator Passcode**: `mirath786`
+- **Protected Access**: Only authorized curators with the private passcode can access the editing studio, add content, or delete entries. Unauthenticated friends and visitors only see the lock screen.
+- **Cryptographic Protection**: Passcode verification uses salted SHA-256 client-side hashing, ensuring your private passcode is never exposed or readable in source code or repositories.
 - **Changing the Passcode**: Inside Studio, click **Curator Security**, enter your current passcode and choose a new private passcode.
 - **Persistent Login**: Once unlocked on your and your fiancée's devices (phone or laptop), `localStorage` remembers the session so you don't need to retype the passcode every visit.
 - **Stealth Mode (Optional)**: In Studio → **Curator Security**, enable *"Hide Studio button from public navigation"*. The button will vanish from the header and navigation bar for all public visitors! You and your fiancée can still access it anytime via:
