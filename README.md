@@ -31,43 +31,6 @@ An authentic, all-in-one Islamic library crafted with a luxury **Gold & Obsidian
 
 ---
 
-## 🎓 GitHub Student Pack Deployment Guide
-
-With your **GitHub Student Developer Pack**, you get free access to GitHub Pro, unlimited GitHub Pages with automated GitHub Actions, and free custom domains from Namecheap or .TECH!
-
-### Step 1: Create the GitHub Repository & Push
-
-Run the automated helper script in your terminal:
-```bash
-./deploy.sh
-```
-
-Or run via GitHub CLI (`gh`):
-```bash
-gh auth login
-gh repo create Mirath --public --source=. --remote=origin --push
-```
-
-### Step 2: Automatic GitHub Pages Deployment (Free SSL)
-
-The repository already includes `.github/workflows/deploy.yml` and `.nojekyll`.
-1. On GitHub, navigate to: `https://github.com/umer6016/Mirath/settings/pages`
-2. Under **Build and deployment** → **Source**, select **GitHub Actions**.
-3. Every push to `main` automatically deploys the website to:
-   `https://umer6016.github.io/Mirath/`
-
-### Step 3: Claim Your Free Custom Domain (GitHub Student Pack Perk)
-1. Go to the [GitHub Student Developer Pack benefits](https://education.github.com/pack).
-2. Claim your free 1-year domain name from **Namecheap** (`.me`) or **.TECH** (e.g., `mirath-library.me`).
-3. In `https://github.com/umer6016/Mirath/settings/pages`, type your custom domain under **Custom domain** and check **Enforce HTTPS**.
-4. GitHub will automatically provision free HTTPS certificates!
-
-### Alternative Deployments:
-- **Vercel**: Import `umer6016/Mirath` at [vercel.com/new](https://vercel.com/new) for instant global edge deployment.
-- **Netlify**: Connect repository at [app.netlify.com](https://app.netlify.com) for automated deployment on push.
-
----
-
 ## ✍️ How You & Your Fiancée Can Add / Delete Content (Curator Sanctuary)
 
 We built a dedicated **Contributor Studio & Curator Sanctuary** right inside the website with **Passcode Security Gate & Stealth Mode** so that friends can view the site freely while only you and your fiancée can make changes:
