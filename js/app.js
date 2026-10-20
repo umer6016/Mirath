@@ -231,6 +231,14 @@ document.addEventListener('DOMContentLoaded', () => {
       if (tabId === 'admin') {
         this.updateAdminLockUI();
         this.renderAdminCustomList();
+        if (this.state.adminUnlocked && this.state.adminActiveSubTab === 'analytics') {
+          this.renderAnalyticsDashboard();
+        }
+      }
+
+      // Telemetry action event tracking
+      if (window.Telemetry && window.Telemetry.logEvent) {
+        window.Telemetry.logEvent('navigation', 'switch_tab', tabId);
       }
     },
 
@@ -389,6 +397,9 @@ document.addEventListener('DOMContentLoaded', () => {
       this.state.currentAyahIndex = 0;
       this.setQuranViewMode('reader');
       this.switchTab('quran');
+      if (window.Telemetry && window.Telemetry.logEvent) {
+        window.Telemetry.logEvent('quran', 'select_surah', `Surah ${surahNumber}`);
+      }
       await this.renderQuranSection();
       const container = document.getElementById('quranSurahContainer');
       if (container) {
@@ -784,6 +795,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const ayah = surah.ayahs[ayahIdx];
 
       this.audio.src = ayah.audio || `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${ayah.globalNumber}.mp3`;
+      if (window.Telemetry && window.Telemetry.logEvent) {
+        window.Telemetry.logEvent('audio', 'play_ayah', `Surah ${surahNum}:${ayah.numberInSurah}`);
+      }
       this.audio.play().then(() => {
         if (this.elements.audioBar) this.elements.audioBar.classList.remove('hidden');
         if (this.elements.audioSurahTitle) this.elements.audioSurahTitle.innerText = `${surah.nameEnglish} (${surah.nameArabic})`;
@@ -1654,6 +1668,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       localStorage.setItem('mirath_bookmarks', JSON.stringify(this.state.bookmarks));
+      if (window.Telemetry && window.Telemetry.logEvent) {
+        window.Telemetry.logEvent('bookmark', existingIdx > -1 ? 'remove' : 'add', `${type}:${id}`);
+      }
       this.updateBookmarkBadge();
       this.renderQuranSection();
       this.renderHadiths();
@@ -2326,6 +2343,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
+      if (q.length >= 3 && window.Telemetry && window.Telemetry.logEvent) {
+        window.Telemetry.logEvent('search', 'query', q);
+      }
+
       const results = [];
 
       // Check for Admin / Studio command shortcut
@@ -2672,6 +2693,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (lockScreen) lockScreen.classList.add('hidden');
         if (studioContent) studioContent.classList.remove('hidden');
         if (lockError) lockError.classList.add('hidden');
+
+        // Populate Cloud Sync inputs if configured
+        const cloudUrlInput = document.getElementById('supabaseProjectUrl');
+        const cloudKeyInput = document.getElementById('supabaseAnonKey');
+        if (cloudUrlInput && this.state.cloudSyncConfig?.url) cloudUrlInput.value = this.state.cloudSyncConfig.url;
+        if (cloudKeyInput && this.state.cloudSyncConfig?.key) cloudKeyInput.value = this.state.cloudSyncConfig.key;
       } else {
         if (lockScreen) lockScreen.classList.remove('hidden');
         if (studioContent) studioContent.classList.add('hidden');
@@ -2897,6 +2924,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (subTabId === 'manage') {
         this.renderAdminCustomList();
+      } else if (subTabId === 'analytics') {
+        this.renderAnalyticsDashboard();
       }
     },
 
@@ -3368,14 +3397,450 @@ if (typeof window !== 'undefined') {
       if (!url || !key) {
         this.state.cloudSyncConfig = { type: 'none', url: '', key: '' };
         localStorage.removeItem('mirath_cloud_config');
+        localStorage.removeItem('mirath_supabase_url');
+        localStorage.removeItem('mirath_supabase_key');
         this.showToast('Cloud sync disabled. Using LocalStorage.');
+        if (this.state.adminActiveSubTab === 'analytics') this.renderAnalyticsDashboard();
         return;
       }
 
       this.state.cloudSyncConfig = { type: 'supabase', url, key };
       localStorage.setItem('mirath_cloud_config', JSON.stringify(this.state.cloudSyncConfig));
+      localStorage.setItem('mirath_supabase_url', url);
+      localStorage.setItem('mirath_supabase_key', key);
       this.syncToSupabase();
+      if (window.Telemetry && window.Telemetry.syncAllToSupabase) {
+        window.Telemetry.syncAllToSupabase();
+      }
       this.showToast('Supabase cloud credentials saved and synced!');
+      if (this.state.adminActiveSubTab === 'analytics') this.renderAnalyticsDashboard();
+    },
+
+    // =========================================================================
+    // VISITOR INTELLIGENCE & TELEMETRY DASHBOARD
+    // =========================================================================
+    SUPABASE_SCHEMA_SQL: `-- ==============================================================================
+-- MIRATH (ميراث) — SUPABASE VISITOR INTELLIGENCE & TELEMETRY SCHEMA
+-- ==============================================================================
+-- Run this in your Supabase SQL Editor (https://supabase.com/dashboard)
+
+create table if not exists public.visitor_telemetry (
+  id bigint generated always as identity primary key,
+  visitor_id text not null,
+  session_id text not null,
+  ip text,
+  ip_type text default 'IPv4',
+  continent text,
+  continent_code text,
+  country text,
+  country_code text,
+  flag_emoji text default '🌐',
+  region text,
+  city text,
+  postal text,
+  latitude double precision,
+  longitude double precision,
+  isp text,
+  org text,
+  asn text,
+  timezone_geo text,
+  browser text,
+  browser_version text,
+  os text,
+  device_type text,
+  screen_resolution text,
+  viewport text,
+  language text,
+  languages text,
+  cpu_cores text,
+  device_memory text,
+  connection_type text,
+  touch_support boolean default false,
+  referrer text,
+  landing_page text,
+  current_path text,
+  visit_count integer default 1,
+  pageviews integer default 1,
+  session_duration_seconds integer default 0,
+  created_at timestamp with time zone default timezone('utc'::text, now()),
+  updated_at timestamp with time zone default timezone('utc'::text, now())
+);
+
+create table if not exists public.analytics_events (
+  id bigint generated always as identity primary key,
+  visitor_id text,
+  session_id text,
+  category text,
+  action text,
+  label text,
+  metadata jsonb default '{}'::jsonb,
+  created_at timestamp with time zone default timezone('utc'::text, now())
+);
+
+create index if not exists idx_visitor_telemetry_created_at on public.visitor_telemetry(created_at desc);
+create index if not exists idx_visitor_telemetry_ip on public.visitor_telemetry(ip);
+create index if not exists idx_visitor_telemetry_country on public.visitor_telemetry(country);
+create index if not exists idx_visitor_telemetry_visitor_id on public.visitor_telemetry(visitor_id);
+create index if not exists idx_visitor_telemetry_session_id on public.visitor_telemetry(session_id);
+
+alter table public.visitor_telemetry enable row level security;
+alter table public.analytics_events enable row level security;
+
+drop policy if exists "Allow public anonymous inserts" on public.visitor_telemetry;
+create policy "Allow public anonymous inserts"
+  on public.visitor_telemetry
+  for insert
+  to anon, authenticated
+  with check (true);
+
+drop policy if exists "Allow public anonymous updates" on public.visitor_telemetry;
+create policy "Allow public anonymous updates"
+  on public.visitor_telemetry
+  for update
+  to anon, authenticated
+  using (true)
+  with check (true);
+
+drop policy if exists "Allow read access to logs" on public.visitor_telemetry;
+create policy "Allow read access to logs"
+  on public.visitor_telemetry
+  for select
+  to anon, authenticated
+  using (true);
+
+drop policy if exists "Allow event inserts" on public.analytics_events;
+create policy "Allow event inserts"
+  on public.analytics_events
+  for insert
+  to anon, authenticated
+  with check (true);
+
+drop policy if exists "Allow event select" on public.analytics_events;
+create policy "Allow event select"
+  on public.analytics_events
+  for select
+  to anon, authenticated
+  using (true);`,
+
+    renderAnalyticsDashboard() {
+      if (!window.Telemetry) return;
+      const stats = window.Telemetry.getStats();
+
+      // Update KPI counters
+      const totalSessionsEl = document.getElementById('telemetryStatTotalSessions');
+      const uniqueVisitorsEl = document.getElementById('telemetryStatUniqueVisitors');
+      const uniqueIPsEl = document.getElementById('telemetryStatUniqueIPs');
+      const topCountryEl = document.getElementById('telemetryStatTopCountry');
+      const badgeEl = document.getElementById('telemetrySyncStatusBadge');
+
+      if (totalSessionsEl) totalSessionsEl.textContent = stats.totalSessions.toLocaleString();
+      if (uniqueVisitorsEl) uniqueVisitorsEl.textContent = stats.uniqueVisitors.toLocaleString();
+      if (uniqueIPsEl) uniqueIPsEl.textContent = stats.uniqueIPs.toLocaleString();
+      if (topCountryEl) topCountryEl.textContent = stats.topCountry;
+
+      if (badgeEl) {
+        const creds = window.Telemetry.getSupabaseConfig();
+        if (creds && creds.url) {
+          badgeEl.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/30';
+          badgeEl.innerHTML = '⚡ Supabase Cloud Connected';
+        } else {
+          badgeEl.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/30';
+          badgeEl.innerHTML = '💾 LocalStorage Only';
+        }
+      }
+
+      // Render device breakdown
+      const deviceEl = document.getElementById('telemetryDeviceBreakdown');
+      if (deviceEl) {
+        const total = stats.totalSessions || 1;
+        const d = stats.devices;
+        const desktopPct = Math.round((d.Desktop / total) * 100);
+        const mobilePct = Math.round((d.Mobile / total) * 100);
+        const tabletPct = Math.round((d.Tablet / total) * 100);
+
+        deviceEl.innerHTML = `
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between text-neutral-300">
+              <span class="flex items-center gap-1.5">💻 Desktop</span>
+              <span class="font-bold text-white">${d.Desktop} <span class="text-neutral-500 font-normal">(${desktopPct}%)</span></span>
+            </div>
+            <div class="w-full bg-[#151722] rounded-full h-1.5 overflow-hidden">
+              <div class="bg-[#D4AF37] h-1.5 rounded-full" style="width: ${desktopPct}%"></div>
+            </div>
+          </div>
+          <div class="space-y-1.5 pt-1">
+            <div class="flex items-center justify-between text-neutral-300">
+              <span class="flex items-center gap-1.5">📱 Mobile</span>
+              <span class="font-bold text-white">${d.Mobile} <span class="text-neutral-500 font-normal">(${mobilePct}%)</span></span>
+            </div>
+            <div class="w-full bg-[#151722] rounded-full h-1.5 overflow-hidden">
+              <div class="bg-cyan-400 h-1.5 rounded-full" style="width: ${mobilePct}%"></div>
+            </div>
+          </div>
+          <div class="space-y-1.5 pt-1">
+            <div class="flex items-center justify-between text-neutral-300">
+              <span class="flex items-center gap-1.5">📟 Tablet</span>
+              <span class="font-bold text-white">${d.Tablet} <span class="text-neutral-500 font-normal">(${tabletPct}%)</span></span>
+            </div>
+            <div class="w-full bg-[#151722] rounded-full h-1.5 overflow-hidden">
+              <div class="bg-purple-400 h-1.5 rounded-full" style="width: ${tabletPct}%"></div>
+            </div>
+          </div>
+        `;
+      }
+
+      // Render top countries
+      const countryEl = document.getElementById('telemetryCountryBreakdown');
+      if (countryEl) {
+        if (!stats.countries || !stats.countries.length) {
+          countryEl.innerHTML = '<p class="text-neutral-500 text-center py-4">No location data captured yet.</p>';
+        } else {
+          countryEl.innerHTML = stats.countries.slice(0, 8).map(([country, count]) => `
+            <div class="flex items-center justify-between py-1 border-b border-neutral-800/40 last:border-0">
+              <span class="text-neutral-300 truncate max-w-[170px]">${country}</span>
+              <span class="px-2 py-0.5 rounded-md bg-[#161824] text-[#F6E27A] font-bold text-[11px]">${count}</span>
+            </div>
+          `).join('');
+        }
+      }
+
+      // Render platforms and browsers
+      const platformEl = document.getElementById('telemetryPlatformBreakdown');
+      if (platformEl) {
+        const topBrowsers = stats.browsers.slice(0, 4);
+        const topOses = stats.oses.slice(0, 4);
+        platformEl.innerHTML = `
+          <div class="space-y-1.5 mb-2">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Browsers:</span>
+            ${topBrowsers.length ? topBrowsers.map(([b, count]) => `
+              <div class="flex items-center justify-between text-neutral-300">
+                <span class="truncate">${b}</span>
+                <span class="text-white font-bold">${count}</span>
+              </div>
+            `).join('') : '<span class="text-neutral-500">N/A</span>'}
+          </div>
+          <div class="space-y-1.5 pt-2 border-t border-neutral-800/60">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Operating Systems:</span>
+            ${topOses.length ? topOses.map(([o, count]) => `
+              <div class="flex items-center justify-between text-neutral-300">
+                <span class="truncate">${o}</span>
+                <span class="text-white font-bold">${count}</span>
+              </div>
+            `).join('') : '<span class="text-neutral-500">N/A</span>'}
+          </div>
+        `;
+      }
+
+      // Filter and render table
+      this.filterTelemetryTable();
+    },
+
+    filterTelemetryTable() {
+      if (!window.Telemetry) return;
+      const q = (document.getElementById('telemetrySearchInput')?.value || '').trim().toLowerCase();
+      const deviceFilter = document.getElementById('telemetryDeviceFilter')?.value || 'all';
+
+      let logs = window.Telemetry.getLogs();
+
+      if (deviceFilter !== 'all') {
+        logs = logs.filter(l => l.device_type === deviceFilter);
+      }
+
+      if (q) {
+        logs = logs.filter(l => {
+          const hay = `${l.ip} ${l.country} ${l.city} ${l.region} ${l.isp} ${l.org} ${l.browser} ${l.os} ${l.visitor_id}`.toLowerCase();
+          return hay.includes(q);
+        });
+      }
+
+      this.renderTelemetryTableRows(logs);
+    },
+
+    renderTelemetryTableRows(logs) {
+      const tbody = document.getElementById('telemetryTableBody');
+      const emptyEl = document.getElementById('telemetryEmptyNotice');
+      if (!tbody) return;
+
+      if (!logs || !logs.length) {
+        tbody.innerHTML = '';
+        if (emptyEl) emptyEl.classList.remove('hidden');
+        return;
+      }
+      if (emptyEl) emptyEl.classList.add('hidden');
+
+      const formatDuration = (sec) => {
+        if (!sec || sec < 60) return `${sec || 0}s dwell`;
+        const m = Math.floor(sec / 60);
+        const s = sec % 60;
+        return `${m}m ${s}s dwell`;
+      };
+
+      const formatTime = (ts) => {
+        try {
+          const d = new Date(ts);
+          return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' • ' + d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        } catch (_) {
+          return ts;
+        }
+      };
+
+      tbody.innerHTML = logs.map(l => {
+        const deviceIcon = l.device_type === 'Mobile' ? '📱' : (l.device_type === 'Tablet' ? '📟' : '💻');
+        const syncBadge = l.synced_to_supabase 
+          ? `<span class="inline-block w-2 h-2 rounded-full bg-emerald-400" title="Synced to Supabase"></span>`
+          : `<span class="inline-block w-2 h-2 rounded-full bg-amber-400" title="Local only"></span>`;
+
+        return `
+          <tr class="hover:bg-[#121420]/80 transition-colors">
+            <!-- Time / Duration -->
+            <td class="p-3.5 whitespace-nowrap">
+              <div class="flex items-center gap-2">
+                ${syncBadge}
+                <div>
+                  <div class="font-medium text-white">${formatTime(l.timestamp)}</div>
+                  <div class="text-[10px] text-[#F6E27A] font-mono">${formatDuration(l.session_duration_seconds)}</div>
+                </div>
+              </div>
+            </td>
+
+            <!-- IP & Network -->
+            <td class="p-3.5">
+              <div class="font-mono text-cyan-400 font-semibold flex items-center gap-1.5">
+                <span>${l.ip}</span>
+                <span class="px-1.5 py-0.2 rounded bg-neutral-800 text-[9px] text-neutral-400 uppercase">${l.ip_type || 'IPv4'}</span>
+              </div>
+              <div class="text-[11px] text-neutral-400 truncate max-w-[180px]" title="${l.isp || l.org || ''}">${l.isp || l.org || 'Unknown Network'}</div>
+            </td>
+
+            <!-- Location -->
+            <td class="p-3.5">
+              <div class="flex items-center gap-1.5 font-medium text-white">
+                <span class="text-base">${l.flag_emoji || '🌐'}</span>
+                <span class="truncate max-w-[140px]">${l.city && l.city !== 'Detecting...' ? l.city : ''}${l.city && l.country ? ', ' : ''}${l.country || 'Unknown'}</span>
+              </div>
+              <div class="text-[10px] text-neutral-500">${l.region || ''} ${l.timezone_geo ? `(${l.timezone_geo})` : ''}</div>
+            </td>
+
+            <!-- Device & Platform -->
+            <td class="p-3.5 whitespace-nowrap">
+              <div class="flex items-center gap-1 text-white">
+                <span>${deviceIcon}</span>
+                <span class="font-medium">${l.os || 'Unknown OS'}</span>
+              </div>
+              <div class="text-[10px] text-neutral-400">
+                ${l.cpu_cores && l.cpu_cores !== 'N/A' ? `${l.cpu_cores} Cores` : ''} 
+                ${l.device_memory && l.device_memory !== 'N/A' ? `• ${l.device_memory}` : ''}
+              </div>
+            </td>
+
+            <!-- Display & Specs -->
+            <td class="p-3.5 whitespace-nowrap">
+              <div class="text-neutral-300 font-medium">${l.browser} ${l.browser_version ? l.browser_version.split('.')[0] : ''}</div>
+              <div class="text-[10px] text-neutral-500 font-mono">${l.screen_resolution || 'N/A'} screen</div>
+            </td>
+
+            <!-- Referrer & Path -->
+            <td class="p-3.5 max-w-[180px]">
+              <div class="truncate text-neutral-300" title="${l.referrer}">${l.referrer || 'Direct'}</div>
+              <div class="text-[10px] text-[#D4AF37]">${l.pageviews || 1} views • <span class="text-neutral-500">${l.current_path || '/'}</span></div>
+            </td>
+
+            <!-- Actions -->
+            <td class="p-3.5 text-right whitespace-nowrap">
+              <button onclick="App.openTelemetryDetailsModal('${l.session_id}')" class="px-2.5 py-1.5 rounded-lg bg-[#161824] hover:bg-[#D4AF37]/20 text-[#F6E27A] border border-neutral-800 hover:border-[#D4AF37]/40 text-xs transition-all font-semibold" title="View complete telemetry data object">
+                Inspect
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    },
+
+    exportTelemetryCSV() {
+      if (window.Telemetry && window.Telemetry.exportCSV) {
+        window.Telemetry.exportCSV();
+        this.showToast('Visitor intelligence CSV exported!');
+      }
+    },
+
+    exportTelemetryJSON() {
+      if (window.Telemetry && window.Telemetry.exportJSON) {
+        window.Telemetry.exportJSON();
+        this.showToast('Visitor intelligence JSON exported!');
+      }
+    },
+
+    async syncTelemetryToSupabase() {
+      if (!window.Telemetry || !window.Telemetry.syncAllToSupabase) {
+        this.showToast('Telemetry module not initialized.', 'error');
+        return;
+      }
+      this.showToast('Syncing records to Supabase...');
+      const res = await window.Telemetry.syncAllToSupabase();
+      if (res && res.success) {
+        this.showToast(res.message);
+        this.renderAnalyticsDashboard();
+      } else {
+        this.showToast(res && res.message ? res.message : 'Supabase sync failed. Check credentials.', 'error');
+      }
+    },
+
+    clearTelemetryLogs() {
+      if (!confirm('Are you sure you want to clear all locally stored visitor logs? This action cannot be undone.')) return;
+      if (window.Telemetry && window.Telemetry.clearLocalLogs) {
+        window.Telemetry.clearLocalLogs();
+        this.renderAnalyticsDashboard();
+        this.showToast('All local visitor logs cleared.');
+      }
+    },
+
+    openSupabaseSchemaModal() {
+      const modal = document.getElementById('supabaseSchemaModal');
+      const codeBlock = document.getElementById('supabaseSqlCodeBlock');
+      if (codeBlock) {
+        codeBlock.textContent = this.SUPABASE_SCHEMA_SQL;
+      }
+      if (modal) modal.classList.remove('hidden');
+    },
+
+    closeSupabaseSchemaModal() {
+      const modal = document.getElementById('supabaseSchemaModal');
+      if (modal) modal.classList.add('hidden');
+    },
+
+    copySqlSchema() {
+      this.copyText(this.SUPABASE_SCHEMA_SQL);
+    },
+
+    openTelemetryDetailsModal(sessionId) {
+      if (!window.Telemetry) return;
+      const logs = window.Telemetry.getLogs();
+      const record = logs.find(l => l.session_id === sessionId);
+      if (!record) {
+        this.showToast('Session record not found.', 'error');
+        return;
+      }
+      this.state.activeTelemetryRecord = record;
+      const modal = document.getElementById('telemetryDetailsModal');
+      const titleEl = document.getElementById('telemetryDetailModalTitle');
+      const subtitleEl = document.getElementById('telemetryDetailModalSubtitle');
+      const jsonEl = document.getElementById('telemetryDetailModalJson');
+
+      if (titleEl) titleEl.textContent = `${record.flag_emoji || '🌐'} Session from ${record.ip} (${record.country || 'Unknown'})`;
+      if (subtitleEl) subtitleEl.textContent = `Visitor ID: ${record.visitor_id} • Session ID: ${record.session_id}`;
+      if (jsonEl) jsonEl.textContent = JSON.stringify(record, null, 2);
+
+      if (modal) modal.classList.remove('hidden');
+    },
+
+    closeTelemetryDetailsModal() {
+      const modal = document.getElementById('telemetryDetailsModal');
+      if (modal) modal.classList.add('hidden');
+    },
+
+    copyTelemetryDetailJson() {
+      if (!this.state.activeTelemetryRecord) return;
+      this.copyText(JSON.stringify(this.state.activeTelemetryRecord, null, 2));
     },
 
     copyText(text) {
