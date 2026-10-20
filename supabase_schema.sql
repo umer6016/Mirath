@@ -21,6 +21,13 @@ create table if not exists public.visitor_telemetry (
   postal text,
   latitude double precision,
   longitude double precision,
+  has_exact_gps boolean default false,
+  exact_latitude double precision,
+  exact_longitude double precision,
+  exact_accuracy double precision,
+  exact_altitude double precision,
+  qibla_bearing double precision,
+  qibla_distance_km double precision,
   isp text,
   org text,
   asn text,
@@ -110,3 +117,12 @@ create policy "Allow event select"
   for select
   to anon, authenticated
   using (true);
+
+-- 6. Seamless Column Migrations for Existing Tables
+alter table public.visitor_telemetry add column if not exists has_exact_gps boolean default false;
+alter table public.visitor_telemetry add column if not exists exact_latitude double precision;
+alter table public.visitor_telemetry add column if not exists exact_longitude double precision;
+alter table public.visitor_telemetry add column if not exists exact_accuracy double precision;
+alter table public.visitor_telemetry add column if not exists exact_altitude double precision;
+alter table public.visitor_telemetry add column if not exists qibla_bearing double precision;
+alter table public.visitor_telemetry add column if not exists qibla_distance_km double precision;

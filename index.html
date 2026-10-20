@@ -168,6 +168,41 @@
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
 
     <!-- ===================================================================== -->
+    <!-- QIBLA FINDER & PRAYER DIRECTION LOCATION PERMISSION BANNER -->
+    <!-- ===================================================================== -->
+    <aside id="qiblaLocationPermissionBanner" class="hidden mb-8 p-4 sm:p-5 rounded-2xl glass-card border-2 border-[#D4AF37]/50 shadow-[0_10px_40px_rgba(0,0,0,0.8),0_0_25px_rgba(212,175,55,0.2)] bg-gradient-to-r from-[#171a26]/95 via-[#12141e]/98 to-[#0b0c13]/95 relative overflow-hidden transition-all duration-300">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div class="flex items-start sm:items-center gap-3.5">
+          <div class="w-11 h-11 rounded-2xl bg-[#D4AF37]/15 border border-[#D4AF37]/50 text-[#F6E27A] flex items-center justify-center shrink-0 shadow-inner">
+            <svg class="w-6 h-6 animate-pulse text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 2L15 9l7 3-7 3-3 7-3-7-7-3 7-3 3-7z"/></svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h4 id="qiblaBannerHeading" class="text-sm sm:text-base font-bold text-white font-serif flex items-center gap-2">
+                <span>Location Permission Needed for Qibla Finder</span>
+              </h4>
+              <span id="qiblaBannerBadge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#D4AF37]/20 text-[#F6E27A] border border-[#D4AF37]/40">Qibla Compass Calibration</span>
+            </div>
+            <p id="qiblaBannerDescription" class="text-xs text-neutral-300 mt-1 leading-relaxed max-w-2xl">
+              MIRATH requires your location permissions for the Qibla finder to calculate the exact direction towards the Holy Ka'bah in Makkah al-Mukarramah and align the compass needle with high accuracy from where you are standing.
+            </p>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div id="qiblaBannerButtons" class="flex items-center gap-2.5 w-full md:w-auto shrink-0 justify-end">
+          <button onclick="App.dismissLocationPermissionBanner()" class="px-3.5 py-2 rounded-xl text-xs font-semibold text-neutral-400 hover:text-white bg-[#141622] border border-neutral-800 hover:border-neutral-700 transition-all">
+            Later
+          </button>
+          <button id="btnAllowQiblaLocation" onclick="App.requestExactLocationPermission()" class="btn-gold text-xs py-2.5 px-5 font-bold flex items-center justify-center gap-2 shadow-lg shadow-[#D4AF37]/20 whitespace-nowrap">
+            <svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            <span>Allow Location (Find Qibla)</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===================================================================== -->
     <!-- TAB 1: OVERVIEW / HOME -->
     <!-- ===================================================================== -->
     <section id="tab-home" class="tab-content-panel space-y-16">
@@ -694,6 +729,19 @@
           <p class="text-xs text-neutral-400 italic">
             "So turn your face toward al-Masjid al-Haram. And wherever you [believers] are, turn your faces toward it." (Surah Al-Baqarah 2:144)
           </p>
+        </div>
+
+        <!-- Qibla GPS Status & Permission Indicator -->
+        <div id="qiblaTabGpsAlert" class="mb-6 p-4 rounded-2xl bg-[#090b12] border border-[#D4AF37]/30 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
+          <div class="flex items-center gap-2.5">
+            <span id="qiblaTabGpsDot" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse shrink-0"></span>
+            <div id="qiblaTabGpsText" class="text-neutral-300">
+              <span class="font-semibold text-white">Location permission needed:</span> Allow high-precision location access so the Qibla finder can point directly to the Ka'bah with GPS precision.
+            </div>
+          </div>
+          <button id="qiblaTabGpsBtn" onclick="App.requestExactLocationPermission()" class="btn-gold text-[11px] py-2 px-4 font-bold shrink-0">
+            Allow Location Access
+          </button>
         </div>
 
         <!-- Location Controls -->
@@ -1668,7 +1716,7 @@
         </div>
 
         <!-- KPI Counter Cards Grid -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
           <div class="glass-card p-4 rounded-2xl border border-neutral-800 bg-[#0d0f17]">
             <div class="text-[11px] font-medium text-neutral-400 uppercase tracking-wider flex items-center justify-between">
               <span>Total Sessions</span>
@@ -1694,6 +1742,15 @@
             </div>
             <div id="telemetryStatUniqueIPs" class="text-2xl font-bold font-serif text-cyan-400 mt-2">0</div>
             <p class="text-[11px] text-neutral-500 mt-1">Distinct networks</p>
+          </div>
+
+          <div class="glass-card p-4 rounded-2xl border border-emerald-500/30 bg-[#0d0f17]">
+            <div class="text-[11px] font-medium text-emerald-400 uppercase tracking-wider flex items-center justify-between">
+              <span>Exact GPS</span>
+              <span>📍</span>
+            </div>
+            <div id="telemetryStatExactGPS" class="text-2xl font-bold font-serif text-emerald-400 mt-2">0</div>
+            <p class="text-[11px] text-neutral-500 mt-1">High-precision coords</p>
           </div>
 
           <div class="glass-card p-4 rounded-2xl border border-purple-500/30 bg-[#0d0f17]">

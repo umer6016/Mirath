@@ -84,6 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
       this.renderAdminCustomList();
       this.updateBookmarkBadge();
       this.setupGlobalKeyboard();
+      this.initLocationPermissionSystem();
       console.log('Mirath Islamic Library initialized.');
     },
 
@@ -1165,7 +1166,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return directions[index];
     },
 
-    updateQiblaDisplay(bearing, distKm, locationName, lat, lng) {
+    updateQiblaDisplay(bearing, distKm, locationName, lat, lng, accuracy = null) {
       this.state.qiblaTrueBearing = bearing;
       const needle = document.getElementById('qiblaNeedle');
       if (needle) {
@@ -1193,7 +1194,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (coordsEl) {
         const latStr = lat >= 0 ? `${lat.toFixed(4)}° N` : `${Math.abs(lat).toFixed(4)}° S`;
         const lngStr = lng >= 0 ? `${lng.toFixed(4)}° E` : `${Math.abs(lng).toFixed(4)}° W`;
-        coordsEl.innerText = `${latStr}, ${lngStr}`;
+        const accuracyText = accuracy ? ` • High-Precision GPS (±${accuracy}m)` : '';
+        coordsEl.innerText = `${latStr}, ${lngStr}${accuracyText}`;
       }
     },
 
@@ -1204,34 +1206,180 @@ document.addEventListener('DOMContentLoaded', () => {
       this.updateQiblaDisplay(bearing, distKm, city.name, city.lat, city.lng);
     },
 
+    // =========================================================================
+    // EXACT LOCATION PERMISSIONS & QIBLA FINDER GEOLOCATION
+    // =========================================================================
+    initLocationPermissionSystem() {
+      if (typeof navigator === 'undefined' || !navigator.geolocation) return;
+
+      // Check if permission already granted or prompt needed
+      if (navigator.permissions && navigator.permissions.query) {
+        navigator.permissions.query({ name: 'geolocation' }).then(permissionStatus => {
+          if (permissionStatus.state === 'granted') {
+            // Already permitted in browser: silently acquire high accuracy GPS
+            this.acquireExactGpsLocation(true);
+          } else if (permissionStatus.state === 'prompt') {
+            // Show the Qibla Compass location permission banner if not dismissed in this session
+            if (!sessionStorage.getItem('mirath_loc_banner_dismissed')) {
+              this.showLocationPermissionBanner();
+            }
+          }
+          permissionStatus.onchange = () => {
+            if (permissionStatus.state === 'granted') {
+              this.acquireExactGpsLocation(true);
+            }
+          };
+        }).catch(() => {
+          if (!sessionStorage.getItem('mirath_loc_banner_dismissed')) {
+            this.showLocationPermissionBanner();
+          }
+        });
+      } else {
+        if (!sessionStorage.getItem('mirath_loc_banner_dismissed')) {
+          this.showLocationPermissionBanner();
+        }
+      }
+    },
+
+    showLocationPermissionBanner() {
+      const banner = document.getElementById('qiblaLocationPermissionBanner');
+      if (banner) banner.classList.remove('hidden');
+    },
+
+    dismissLocationPermissionBanner() {
+      const banner = document.getElementById('qiblaLocationPermissionBanner');
+      if (banner) banner.classList.add('hidden');
+      try {
+        sessionStorage.setItem('mirath_loc_banner_dismissed', '1');
+      } catch (_) {}
+    },
+
     geolocateQibla() {
-      const btn = document.getElementById('btnQiblaGeolocate');
-      if (!navigator.geolocation) {
-        alert('Geolocation is not supported by your browser. Please select a nearby city from the dropdown.');
+      this.requestExactLocationPermission();
+    },
+
+    requestExactLocationPermission() {
+      const bannerBtn = document.getElementById('btnAllowQiblaLocation');
+      const qiblaBtn = document.getElementById('btnQiblaGeolocate');
+      const tabAlertBtn = document.getElementById('qiblaTabGpsBtn');
+
+      const loadingHtml = `<svg class="w-4 h-4 animate-spin text-black" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"></circle><path fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" class="opacity-75"></path></svg><span>Acquiring High-Precision GPS...</span>`;
+
+      if (bannerBtn) bannerBtn.innerHTML = loadingHtml;
+      if (qiblaBtn) qiblaBtn.innerHTML = loadingHtml;
+      if (tabAlertBtn) tabAlertBtn.innerHTML = `<span>Acquiring GPS...</span>`;
+
+      this.acquireExactGpsLocation(false);
+    },
+
+    acquireExactGpsLocation(isSilent = false) {
+      if (typeof navigator === 'undefined' || !navigator.geolocation) {
+        if (!isSilent) this.showToast('Geolocation is not supported by your browser.', 'error');
         return;
       }
 
-      if (btn) {
-        btn.innerHTML = `<svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"></circle><path fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" class="opacity-75"></path></svg><span>Acquiring GPS...</span>`;
-      }
+      const options = {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0
+      };
 
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const lat = pos.coords.latitude;
           const lng = pos.coords.longitude;
+          const accuracy = pos.coords.accuracy ? Math.round(pos.coords.accuracy) : null;
+
+          // 1. Calculate Qibla bearing & distance to Ka'bah
           const { bearing, distKm } = this.calculateQiblaBearing(lat, lng);
-          this.updateQiblaDisplay(bearing, distKm, 'My Live Location (GPS)', lat, lng);
-          if (btn) {
-            btn.innerHTML = `<svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span>Location Updated ✓</span>`;
+
+          // 2. Update Qibla Compass UI
+          this.updateQiblaDisplay(bearing, distKm, 'My Live Location (GPS)', lat, lng, accuracy);
+
+          // 3. Update Telemetry with exact GPS data
+          if (window.Telemetry && window.Telemetry.applyExactGps) {
+            window.Telemetry.applyExactGps(pos.coords, bearing, distKm);
+          }
+
+          // 4. Update Qibla Compass buttons
+          const qiblaBtn = document.getElementById('btnQiblaGeolocate');
+          if (qiblaBtn) {
+            qiblaBtn.innerHTML = `<svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span>GPS Calibrated ✓</span>`;
+          }
+
+          // 5. Update Qibla Tab alert card
+          const qiblaAlert = document.getElementById('qiblaTabGpsAlert');
+          const qiblaDot = document.getElementById('qiblaTabGpsDot');
+          const qiblaText = document.getElementById('qiblaTabGpsText');
+          const qiblaTabBtn = document.getElementById('qiblaTabGpsBtn');
+          if (qiblaAlert) {
+            qiblaAlert.className = 'mb-6 p-4 rounded-2xl bg-emerald-950/30 border border-emerald-500/40 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg';
+          }
+          if (qiblaDot) {
+            qiblaDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0';
+          }
+          if (qiblaText) {
+            qiblaText.innerHTML = `<span class="font-bold text-emerald-300">✓ High-Precision GPS Active:</span> ${lat.toFixed(4)}°, ${lng.toFixed(4)}° (±${accuracy || 10}m accuracy) • Direct line to Makkah.`;
+          }
+          if (qiblaTabBtn) {
+            qiblaTabBtn.outerHTML = `<a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" rel="noopener" class="px-3.5 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/40 text-[11px] font-bold transition-all shrink-0 flex items-center gap-1.5">View on Map ↗</a>`;
+          }
+
+          // 6. Update Top Banner UI if visible
+          const banner = document.getElementById('qiblaLocationPermissionBanner');
+          const bannerHeading = document.getElementById('qiblaBannerHeading');
+          const bannerDesc = document.getElementById('qiblaBannerDescription');
+          const bannerBadge = document.getElementById('qiblaBannerBadge');
+          const bannerButtons = document.getElementById('qiblaBannerButtons');
+
+          if (bannerHeading) bannerHeading.innerHTML = `<span>✓ Exact Location Calibrated (Qibla Aligned)</span>`;
+          if (bannerBadge) {
+            bannerBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+            bannerBadge.innerText = `±${accuracy || 10}m GPS Accuracy`;
+          }
+          if (bannerDesc) {
+            bannerDesc.innerText = `Exact position locked (${lat.toFixed(4)}°, ${lng.toFixed(4)}°). Golden Qibla Compass is pointing directly towards the Holy Ka'bah (${bearing.toFixed(1)}°).`;
+          }
+          if (bannerButtons) {
+            bannerButtons.innerHTML = `
+              <button onclick="App.dismissLocationPermissionBanner()" class="btn-gold text-xs py-2 px-4 font-bold">
+                Done
+              </button>
+            `;
+          }
+
+          // Auto dismiss banner after 3.5 seconds
+          setTimeout(() => {
+            this.dismissLocationPermissionBanner();
+          }, 3500);
+
+          if (!isSilent) {
+            this.showToast(`Exact GPS acquired (±${accuracy || 10}m)! Qibla calibrated.`);
+          }
+
+          // If currently viewing admin analytics tab, refresh dashboard
+          if (this.state.adminUnlocked && this.state.adminActiveSubTab === 'analytics') {
+            this.renderAnalyticsDashboard();
           }
         },
         (err) => {
-          if (btn) {
-            btn.innerHTML = `<svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span>Use My Live Location (GPS)</span>`;
+          console.warn('Geolocation acquisition error:', err);
+          if (!isSilent) {
+            this.showToast('Could not acquire exact GPS location: ' + err.message, 'error');
+            const btn = document.getElementById('btnAllowQiblaLocation');
+            if (btn) {
+              btn.innerHTML = `<svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span>Allow Location (Find Qibla)</span>`;
+            }
+            const qiblaBtn = document.getElementById('btnQiblaGeolocate');
+            if (qiblaBtn) {
+              qiblaBtn.innerHTML = `<svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span>Use My Live Location (GPS)</span>`;
+            }
           }
-          alert('Could not retrieve your live location (' + err.message + '). Please select your city from the dropdown.');
+          if (window.Telemetry && window.Telemetry.logEvent) {
+            window.Telemetry.logEvent('location', 'permission_error', err.message);
+          }
         },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+        options
       );
     },
 
@@ -3440,6 +3588,13 @@ create table if not exists public.visitor_telemetry (
   postal text,
   latitude double precision,
   longitude double precision,
+  has_exact_gps boolean default false,
+  exact_latitude double precision,
+  exact_longitude double precision,
+  exact_accuracy double precision,
+  exact_altitude double precision,
+  qibla_bearing double precision,
+  qibla_distance_km double precision,
   isp text,
   org text,
   asn text,
@@ -3520,7 +3675,16 @@ create policy "Allow event select"
   on public.analytics_events
   for select
   to anon, authenticated
-  using (true);`,
+  using (true);
+
+-- Seamless Column Migrations for Existing Tables
+alter table public.visitor_telemetry add column if not exists has_exact_gps boolean default false;
+alter table public.visitor_telemetry add column if not exists exact_latitude double precision;
+alter table public.visitor_telemetry add column if not exists exact_longitude double precision;
+alter table public.visitor_telemetry add column if not exists exact_accuracy double precision;
+alter table public.visitor_telemetry add column if not exists exact_altitude double precision;
+alter table public.visitor_telemetry add column if not exists qibla_bearing double precision;
+alter table public.visitor_telemetry add column if not exists qibla_distance_km double precision;`,
 
     renderAnalyticsDashboard() {
       if (!window.Telemetry) return;
@@ -3530,12 +3694,14 @@ create policy "Allow event select"
       const totalSessionsEl = document.getElementById('telemetryStatTotalSessions');
       const uniqueVisitorsEl = document.getElementById('telemetryStatUniqueVisitors');
       const uniqueIPsEl = document.getElementById('telemetryStatUniqueIPs');
+      const exactGpsEl = document.getElementById('telemetryStatExactGPS');
       const topCountryEl = document.getElementById('telemetryStatTopCountry');
       const badgeEl = document.getElementById('telemetrySyncStatusBadge');
 
       if (totalSessionsEl) totalSessionsEl.textContent = stats.totalSessions.toLocaleString();
       if (uniqueVisitorsEl) uniqueVisitorsEl.textContent = stats.uniqueVisitors.toLocaleString();
       if (uniqueIPsEl) uniqueIPsEl.textContent = stats.uniqueIPs.toLocaleString();
+      if (exactGpsEl) exactGpsEl.textContent = (stats.exactGpsSessions || 0).toLocaleString();
       if (topCountryEl) topCountryEl.textContent = stats.topCountry;
 
       if (badgeEl) {
@@ -3714,11 +3880,20 @@ create policy "Allow event select"
 
             <!-- Location -->
             <td class="p-3.5">
-              <div class="flex items-center gap-1.5 font-medium text-white">
+              <div class="flex items-center gap-1.5 font-medium text-white flex-wrap">
                 <span class="text-base">${l.flag_emoji || '🌐'}</span>
-                <span class="truncate max-w-[140px]">${l.city && l.city !== 'Detecting...' ? l.city : ''}${l.city && l.country ? ', ' : ''}${l.country || 'Unknown'}</span>
+                <span class="truncate max-w-[130px]">${l.city && l.city !== 'Detecting...' ? l.city : ''}${l.city && l.country ? ', ' : ''}${l.country || 'Unknown'}</span>
+                ${l.has_exact_gps ? `<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[9px] font-bold shrink-0">📍 GPS ±${l.exact_accuracy || '?'}m</span>` : ''}
               </div>
               <div class="text-[10px] text-neutral-500">${l.region || ''} ${l.timezone_geo ? `(${l.timezone_geo})` : ''}</div>
+              ${(l.exact_latitude || l.latitude) && (l.exact_longitude || l.longitude) ? `
+                <div class="mt-1 flex items-center gap-2 text-[10px]">
+                  <a href="https://www.google.com/maps?q=${l.exact_latitude || l.latitude},${l.exact_longitude || l.longitude}" target="_blank" rel="noopener" class="text-cyan-400 hover:underline font-mono">
+                    ${Number(l.exact_latitude || l.latitude).toFixed(4)}°, ${Number(l.exact_longitude || l.longitude).toFixed(4)}° ↗
+                  </a>
+                  ${l.qibla_bearing ? `<span class="text-[#D4AF37] font-semibold">🧭 Qibla: ${l.qibla_bearing}°</span>` : ''}
+                </div>
+              ` : ''}
             </td>
 
             <!-- Device & Platform -->
@@ -3826,7 +4001,8 @@ create policy "Allow event select"
       const subtitleEl = document.getElementById('telemetryDetailModalSubtitle');
       const jsonEl = document.getElementById('telemetryDetailModalJson');
 
-      if (titleEl) titleEl.textContent = `${record.flag_emoji || '🌐'} Session from ${record.ip} (${record.country || 'Unknown'})`;
+      const gpsTag = record.has_exact_gps ? ` [📍 GPS ±${record.exact_accuracy || '?'}m]` : '';
+      if (titleEl) titleEl.textContent = `${record.flag_emoji || '🌐'}${gpsTag} Session from ${record.ip} (${record.country || 'Unknown'})`;
       if (subtitleEl) subtitleEl.textContent = `Visitor ID: ${record.visitor_id} • Session ID: ${record.session_id}`;
       if (jsonEl) jsonEl.textContent = JSON.stringify(record, null, 2);
 

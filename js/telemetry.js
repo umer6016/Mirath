@@ -68,6 +68,15 @@ const Telemetry = {
       asn: '',
       timezone_geo: '',
 
+      // High-accuracy GPS location (populated when browser location permission granted)
+      has_exact_gps: false,
+      exact_latitude: null,
+      exact_longitude: null,
+      exact_accuracy: null,
+      exact_altitude: null,
+      qibla_bearing: null,
+      qibla_distance_km: null,
+
       // Device & Browser
       ...deviceSpecs,
 
@@ -288,6 +297,39 @@ const Telemetry = {
   },
 
   /**
+   * Apply exact GPS coordinates from browser Geolocation API
+   */
+  applyExactGps(coords, qiblaBearing = null, qiblaDistance = null) {
+    if (!coords || !this.state.currentSession) return;
+    const s = this.state.currentSession;
+    s.has_exact_gps = true;
+    s.exact_latitude = coords.latitude;
+    s.exact_longitude = coords.longitude;
+    s.exact_accuracy = coords.accuracy ? Math.round(coords.accuracy) : null;
+    s.exact_altitude = coords.altitude ? Math.round(coords.altitude) : null;
+    // Overwrite primary coordinates with exact GPS
+    s.latitude = coords.latitude;
+    s.longitude = coords.longitude;
+    if (qiblaBearing !== null && qiblaBearing !== undefined) {
+      s.qibla_bearing = parseFloat(Number(qiblaBearing).toFixed(2));
+    }
+    if (qiblaDistance !== null && qiblaDistance !== undefined) {
+      s.qibla_distance_km = Math.round(qiblaDistance);
+    }
+    s.updated_at = new Date().toISOString();
+
+    this.saveSessionLocally(s);
+    this.syncSessionToSupabase(s);
+    this.logEvent('location', 'gps_granted', `Accuracy ±${s.exact_accuracy}m`, {
+      latitude: s.exact_latitude,
+      longitude: s.exact_longitude,
+      accuracy: s.exact_accuracy,
+      qibla_bearing: s.qibla_bearing,
+      qibla_distance_km: s.qibla_distance_km
+    });
+  },
+
+  /**
    * Save or update session record in localStorage
    */
   saveSessionLocally(sessionRecord) {
@@ -335,6 +377,7 @@ const Telemetry = {
     const totalSessions = logs.length;
     const uniqueIPs = new Set(logs.map(l => l.ip).filter(ip => ip && !ip.includes('Detecting'))).size;
     const uniqueVisitors = new Set(logs.map(l => l.visitor_id)).size;
+    const exactGpsSessions = logs.filter(l => l.has_exact_gps).length;
 
     // Device breakdown
     const devices = { Mobile: 0, Tablet: 0, Desktop: 0 };
@@ -364,6 +407,7 @@ const Telemetry = {
       totalSessions,
       uniqueIPs,
       uniqueVisitors,
+      exactGpsSessions,
       devices,
       countries: sortedCountries,
       topCountry,
@@ -481,6 +525,13 @@ const Telemetry = {
         postal: sessionRecord.postal,
         latitude: sessionRecord.latitude,
         longitude: sessionRecord.longitude,
+        has_exact_gps: Boolean(sessionRecord.has_exact_gps),
+        exact_latitude: sessionRecord.exact_latitude !== null && sessionRecord.exact_latitude !== undefined ? Number(sessionRecord.exact_latitude) : null,
+        exact_longitude: sessionRecord.exact_longitude !== null && sessionRecord.exact_longitude !== undefined ? Number(sessionRecord.exact_longitude) : null,
+        exact_accuracy: sessionRecord.exact_accuracy !== null && sessionRecord.exact_accuracy !== undefined ? Number(sessionRecord.exact_accuracy) : null,
+        exact_altitude: sessionRecord.exact_altitude !== null && sessionRecord.exact_altitude !== undefined ? Number(sessionRecord.exact_altitude) : null,
+        qibla_bearing: sessionRecord.qibla_bearing !== null && sessionRecord.qibla_bearing !== undefined ? Number(sessionRecord.qibla_bearing) : null,
+        qibla_distance_km: sessionRecord.qibla_distance_km !== null && sessionRecord.qibla_distance_km !== undefined ? Number(sessionRecord.qibla_distance_km) : null,
         isp: sessionRecord.isp,
         org: sessionRecord.org,
         asn: sessionRecord.asn ? String(sessionRecord.asn) : '',
@@ -647,6 +698,13 @@ const Telemetry = {
       'Postal Code',
       'Latitude',
       'Longitude',
+      'Has Exact GPS',
+      'Exact Latitude',
+      'Exact Longitude',
+      'GPS Accuracy (m)',
+      'Qibla Bearing (deg)',
+      'Qibla Distance (km)',
+      'Google Maps Link',
       'ISP / Carrier',
       'Organization',
       'ASN',
@@ -689,6 +747,13 @@ const Telemetry = {
       escapeCSV(l.postal),
       escapeCSV(l.latitude),
       escapeCSV(l.longitude),
+      escapeCSV(l.has_exact_gps ? 'Yes (GPS)' : 'No (IP Geo)'),
+      escapeCSV(l.exact_latitude !== null && l.exact_latitude !== undefined ? l.exact_latitude : (l.has_exact_gps ? l.latitude : '')),
+      escapeCSV(l.exact_longitude !== null && l.exact_longitude !== undefined ? l.exact_longitude : (l.has_exact_gps ? l.longitude : '')),
+      escapeCSV(l.exact_accuracy ? `±${l.exact_accuracy}m` : ''),
+      escapeCSV(l.qibla_bearing ? `${l.qibla_bearing}°` : ''),
+      escapeCSV(l.qibla_distance_km ? `${l.qibla_distance_km} km` : ''),
+      escapeCSV(l.latitude && l.longitude ? `https://www.google.com/maps?q=${l.latitude},${l.longitude}` : ''),
       escapeCSV(l.isp),
       escapeCSV(l.org),
       escapeCSV(l.asn),
