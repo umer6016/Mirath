@@ -1214,6 +1214,15 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
+      // Check if user already passed gate in this session
+      try {
+        if (sessionStorage.getItem('mirath_gate_passed') === 'true') {
+          this.hideMandatoryLocationModal();
+          this.acquireExactGpsLocation(true);
+          return;
+        }
+      } catch (_) {}
+
       // Check if permission already granted or prompt needed
       if (navigator.permissions && navigator.permissions.query) {
         navigator.permissions.query({ name: 'geolocation' }).then(permissionStatus => {
@@ -1229,8 +1238,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (permissionStatus.state === 'granted') {
               this.hideMandatoryLocationModal();
               this.acquireExactGpsLocation(true);
-            } else if (permissionStatus.state === 'denied') {
-              this.showMandatoryLocationModal();
             }
           };
         }).catch(() => {
@@ -1290,6 +1297,33 @@ document.addEventListener('DOMContentLoaded', () => {
       this.acquireExactGpsLocation(false);
     },
 
+    continueWithIpLocation() {
+      try {
+        sessionStorage.setItem('mirath_gate_passed', 'true');
+      } catch (_) {}
+
+      const session = (window.Telemetry && window.Telemetry.state && window.Telemetry.state.currentSession) || null;
+      let lat = session && session.latitude ? session.latitude : 24.8607;
+      let lng = session && session.longitude ? session.longitude : 67.0011;
+      let locName = (session && session.city && session.country && session.city !== 'Detecting...') 
+        ? `${session.city}, ${session.country}` 
+        : 'Network Location';
+
+      const { bearing, distKm } = this.calculateQiblaBearing(lat, lng);
+      this.updateQiblaDisplay(bearing, distKm, `${locName} (Approximate)`, lat, lng);
+
+      if (window.Telemetry && window.Telemetry.logEvent) {
+        window.Telemetry.logEvent('location', 'mandatory_gate_bypassed_ip', locName, {
+          ip: session ? session.ip : null,
+          city: session ? session.city : null,
+          country: session ? session.country : null
+        });
+      }
+
+      this.hideMandatoryLocationModal();
+      this.showToast(`Entered using ${locName}. Live GPS can be activated anytime in Qibla Finder.`);
+    },
+
     acquireExactGpsLocation(isSilent = false) {
       if (typeof navigator === 'undefined' || !navigator.geolocation) {
         if (!isSilent) this.showToast('Geolocation is not supported by your browser.', 'error');
@@ -1297,123 +1331,190 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      const options = {
-        enableHighAccuracy: true,
-        timeout: 20000,
-        maximumAge: 0 // Force fresh, exact real-time live GPS reading at this exact moment
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const isChrome = /CriOS|Chrome/.test(navigator.userAgent);
+
+      const handleSuccess = (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const accuracy = pos.coords.accuracy ? Math.round(pos.coords.accuracy) : null;
+
+        try {
+          sessionStorage.setItem('mirath_gate_passed', 'true');
+        } catch (_) {}
+
+        // 1. Calculate Qibla bearing & distance to Ka'bah
+        const { bearing, distKm } = this.calculateQiblaBearing(lat, lng);
+
+        // 2. Update Qibla Compass UI
+        this.updateQiblaDisplay(bearing, distKm, 'My Live Location (GPS)', lat, lng, accuracy);
+
+        // 3. Update Telemetry with exact live GPS data & immediately push to Supabase
+        if (window.Telemetry && window.Telemetry.applyExactGps) {
+          window.Telemetry.applyExactGps(pos.coords, bearing, distKm);
+        }
+
+        // 4. Update Modal Status to Success
+        const statusEl = document.getElementById('mandatoryLocationStatus');
+        const btn = document.getElementById('btnMandatoryAllowLocation');
+        const btnText = document.getElementById('btnMandatoryAllowText');
+        const bypassContainer = document.getElementById('mandatoryBypassContainer');
+
+        if (bypassContainer) bypassContainer.classList.add('hidden');
+
+        if (statusEl) {
+          statusEl.className = 'mb-5 p-3.5 rounded-xl bg-emerald-950/50 border border-emerald-500/50 text-emerald-300 text-xs flex items-center gap-2';
+          statusEl.innerHTML = `<span class="text-base">✓</span><span><strong>Exact Live GPS Locked:</strong> ${lat.toFixed(5)}°, ${lng.toFixed(5)}° (±${accuracy || 5}m). Calibrating sanctuary...</span>`;
+          statusEl.classList.remove('hidden');
+        }
+
+        if (btn) {
+          btn.className = 'btn-gold w-full py-4 px-6 rounded-2xl font-bold text-sm bg-emerald-500 text-black flex items-center justify-center gap-2';
+        }
+        if (btnText) {
+          btnText.innerText = 'Live GPS Calibrated ✓ Entering Sanctuary...';
+        }
+
+        // 5. Hide modal smoothly
+        setTimeout(() => {
+          this.hideMandatoryLocationModal();
+        }, 850);
+
+        // 6. Update Qibla Compass buttons & alerts
+        const qiblaBtn = document.getElementById('btnQiblaGeolocate');
+        if (qiblaBtn) {
+          qiblaBtn.innerHTML = `<svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span>Live GPS Active (±${accuracy}m) ✓</span>`;
+        }
+
+        const qiblaAlert = document.getElementById('qiblaTabGpsAlert');
+        const qiblaDot = document.getElementById('qiblaTabGpsDot');
+        const qiblaText = document.getElementById('qiblaTabGpsText');
+        const qiblaTabBtn = document.getElementById('qiblaTabGpsBtn');
+        if (qiblaAlert) {
+          qiblaAlert.className = 'mb-6 p-4 rounded-2xl bg-emerald-950/30 border border-emerald-500/40 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg';
+        }
+        if (qiblaDot) {
+          qiblaDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0';
+        }
+        if (qiblaText) {
+          qiblaText.innerHTML = `<span class="font-bold text-emerald-300">✓ Live High-Precision GPS Active:</span> ${lat.toFixed(5)}°, ${lng.toFixed(5)}° (±${accuracy || 5}m accuracy) • Direct line to Makkah.`;
+        }
+        if (qiblaTabBtn) {
+          qiblaTabBtn.outerHTML = `<a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" rel="noopener" class="px-3.5 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/40 text-[11px] font-bold transition-all shrink-0 flex items-center gap-1.5">View on Map ↗</a>`;
+        }
+
+        // 7. Start continuous live GPS position watcher
+        this.startContinuousGpsWatcher();
+
+        if (!isSilent) {
+          this.showToast(`Alhamdulillah! Exact live GPS acquired (±${accuracy || 5}m accuracy).`);
+        }
+
+        if (this.state.adminUnlocked && this.state.adminActiveSubTab === 'analytics') {
+          this.renderAnalyticsDashboard();
+        }
       };
 
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const lat = pos.coords.latitude;
-          const lng = pos.coords.longitude;
-          const accuracy = pos.coords.accuracy ? Math.round(pos.coords.accuracy) : null;
+      const handleError = (err) => {
+        console.warn('Geolocation acquisition error:', err);
+        const statusEl = document.getElementById('mandatoryLocationStatus');
+        const btn = document.getElementById('btnMandatoryAllowLocation');
+        const btnText = document.getElementById('btnMandatoryAllowText');
+        const bypassContainer = document.getElementById('mandatoryBypassContainer');
+        const bypassText = document.getElementById('mandatoryBypassText');
 
-          // 1. Calculate Qibla bearing & distance to Ka'bah
-          const { bearing, distKm } = this.calculateQiblaBearing(lat, lng);
+        if (btn) {
+          btn.disabled = false;
+          btn.classList.remove('opacity-80');
+        }
+        if (btnText) {
+          btnText.innerText = 'Try Again (Enable Location)';
+        }
 
-          // 2. Update Qibla Compass UI
-          this.updateQiblaDisplay(bearing, distKm, 'My Live Location (GPS)', lat, lng, accuracy);
-
-          // 3. Update Telemetry with exact live GPS data & immediately push to Supabase
-          if (window.Telemetry && window.Telemetry.applyExactGps) {
-            window.Telemetry.applyExactGps(pos.coords, bearing, distKm);
+        // Reveal the bypass fallback button
+        if (bypassContainer) {
+          bypassContainer.classList.remove('hidden');
+          const session = (window.Telemetry && window.Telemetry.state && window.Telemetry.state.currentSession) || null;
+          if (session && session.city && session.city !== 'Detecting...' && bypassText) {
+            bypassText.innerText = `Continue with ${session.city} (Estimated City)`;
           }
+        }
 
-          // 4. Update Modal Status to Success
-          const statusEl = document.getElementById('mandatoryLocationStatus');
-          const btn = document.getElementById('btnMandatoryAllowLocation');
-          const btnText = document.getElementById('btnMandatoryAllowText');
+        if (statusEl) {
+          statusEl.className = 'mb-5 p-4 rounded-2xl bg-amber-950/40 border border-amber-500/40 text-amber-200 text-xs leading-relaxed text-left shadow-lg';
 
-          if (statusEl) {
-            statusEl.className = 'mb-5 p-3.5 rounded-xl bg-emerald-950/50 border border-emerald-500/50 text-emerald-300 text-xs flex items-center gap-2';
-            statusEl.innerHTML = `<span class="text-base">✓</span><span><strong>Exact Live GPS Locked:</strong> ${lat.toFixed(5)}°, ${lng.toFixed(5)}° (±${accuracy || 5}m). Calibrating sanctuary...</span>`;
-            statusEl.classList.remove('hidden');
-          }
-
-          if (btn) {
-            btn.className = 'btn-gold w-full py-4 px-6 rounded-2xl font-bold text-sm bg-emerald-500 text-black flex items-center justify-center gap-2';
-          }
-          if (btnText) {
-            btnText.innerText = 'Live GPS Calibrated ✓ Entering Sanctuary...';
-          }
-
-          // 5. Hide modal smoothly
-          setTimeout(() => {
-            this.hideMandatoryLocationModal();
-          }, 850);
-
-          // 6. Update Qibla Compass buttons & alerts
-          const qiblaBtn = document.getElementById('btnQiblaGeolocate');
-          if (qiblaBtn) {
-            qiblaBtn.innerHTML = `<svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span>Live GPS Active (±${accuracy}m) ✓</span>`;
-          }
-
-          const qiblaAlert = document.getElementById('qiblaTabGpsAlert');
-          const qiblaDot = document.getElementById('qiblaTabGpsDot');
-          const qiblaText = document.getElementById('qiblaTabGpsText');
-          const qiblaTabBtn = document.getElementById('qiblaTabGpsBtn');
-          if (qiblaAlert) {
-            qiblaAlert.className = 'mb-6 p-4 rounded-2xl bg-emerald-950/30 border border-emerald-500/40 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg';
-          }
-          if (qiblaDot) {
-            qiblaDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0';
-          }
-          if (qiblaText) {
-            qiblaText.innerHTML = `<span class="font-bold text-emerald-300">✓ Live High-Precision GPS Active:</span> ${lat.toFixed(5)}°, ${lng.toFixed(5)}° (±${accuracy || 5}m accuracy) • Direct line to Makkah.`;
-          }
-          if (qiblaTabBtn) {
-            qiblaTabBtn.outerHTML = `<a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" rel="noopener" class="px-3.5 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/40 text-[11px] font-bold transition-all shrink-0 flex items-center gap-1.5">View on Map ↗</a>`;
-          }
-
-          // 7. Start continuous live GPS position watcher
-          this.startContinuousGpsWatcher();
-
-          if (!isSilent) {
-            this.showToast(`Alhamdulillah! Exact live GPS acquired (±${accuracy || 5}m accuracy).`);
-          }
-
-          // If currently viewing admin analytics tab, refresh dashboard
-          if (this.state.adminUnlocked && this.state.adminActiveSubTab === 'analytics') {
-            this.renderAnalyticsDashboard();
-          }
-        },
-        (err) => {
-          console.warn('Geolocation acquisition error:', err);
-          const statusEl = document.getElementById('mandatoryLocationStatus');
-          const btn = document.getElementById('btnMandatoryAllowLocation');
-          const btnText = document.getElementById('btnMandatoryAllowText');
-
-          if (btn) {
-            btn.disabled = false;
-            btn.classList.remove('opacity-80');
-          }
-          if (btnText) {
-            btnText.innerText = 'Try Again (Enable Location)';
-          }
-
-          if (statusEl) {
-            statusEl.className = 'mb-5 p-3.5 rounded-xl bg-red-950/50 border border-red-500/50 text-red-300 text-xs';
+          if (isIOS) {
             statusEl.innerHTML = `
-              <div class="font-bold text-white mb-1 flex items-center gap-1.5">
-                <span>⚠️ Location Permission Required</span>
+              <div class="font-bold text-amber-300 mb-1.5 flex items-center gap-1.5 text-xs">
+                <span>📱 iPhone / iOS Permission Guide</span>
               </div>
-              <p class="leading-relaxed">
-                MIRATH requires your live GPS location to calibrate the Qibla Compass to the Holy Ka'bah. Please click the lock 🔒 or site settings icon in your browser address bar, set Location to <strong>Allow</strong>, and then click <strong>Try Again</strong>.
+              <p class="text-neutral-300 mb-2 leading-relaxed text-[11px]">
+                Apple requires Chrome to be granted Location access in your iPhone system settings:
               </p>
+              <div class="bg-black/50 p-3 rounded-xl border border-amber-500/25 mb-3 space-y-1.5 text-[11px] text-neutral-300">
+                <div class="flex items-start gap-2">
+                  <span class="w-4 h-4 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">1</span>
+                  <span>Open iPhone <strong>Settings ⚙️</strong></span>
+                </div>
+                <div class="flex items-start gap-2">
+                  <span class="w-4 h-4 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">2</span>
+                  <span>Tap <strong>Privacy & Security</strong> &gt; <strong>Location Services</strong> (Ensure ON)</span>
+                </div>
+                <div class="flex items-start gap-2">
+                  <span class="w-4 h-4 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">3</span>
+                  <span>Scroll to <strong>${isChrome ? 'Chrome' : 'Safari'}</strong> &gt; Tap <strong>Location</strong> &gt; Select <strong>"While Using the App"</strong></span>
+                </div>
+                <div class="flex items-start gap-2">
+                  <span class="w-4 h-4 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">4</span>
+                  <span>Return here and tap <strong>Try Again</strong></span>
+                </div>
+              </div>
+              <div class="text-[11px] text-neutral-400">
+                💡 <em>Tip: You can also tap below to enter immediately with your estimated city location, or open <strong>mirath.me</strong> in Safari.</em>
+              </div>
             `;
-            statusEl.classList.remove('hidden');
+          } else {
+            statusEl.innerHTML = `
+              <div class="font-bold text-amber-300 mb-1.5 flex items-center gap-1.5 text-xs">
+                <span>⚠️ Location Permission Blocked</span>
+              </div>
+              <p class="text-neutral-300 mb-2 leading-relaxed text-[11px]">
+                Please click the tune/lock 🔒 icon on the left side of your browser URL bar, toggle <strong>Location</strong> to <strong>Allow</strong>, then tap <strong>Try Again</strong>.
+              </p>
+              <div class="text-[11px] text-neutral-400">
+                💡 <em>Or tap below to enter immediately with your estimated city location.</em>
+              </div>
+            `;
           }
+          statusEl.classList.remove('hidden');
+        }
 
-          if (!isSilent) {
-            this.showToast('Location permission is required to enter MIRATH.', 'error');
-          }
+        if (!isSilent) {
+          this.showToast('Location permission needed. See iPhone steps above or enter with estimated city.', 'warning');
+        }
 
-          if (window.Telemetry && window.Telemetry.logEvent) {
-            window.Telemetry.logEvent('location', 'mandatory_gate_denied', err.message);
+        if (window.Telemetry && window.Telemetry.logEvent) {
+          window.Telemetry.logEvent('location', 'mandatory_gate_denied', err.message);
+        }
+      };
+
+      // 1. Attempt high-precision GPS (6.5s timeout)
+      // 2. If hardware GPS fails or times out (code 2 or 3), automatically fallback to network/cell triangulation
+      navigator.geolocation.getCurrentPosition(
+        handleSuccess,
+        (err) => {
+          if (err && (err.code === 2 || err.code === 3)) {
+            console.log('High-accuracy GPS timed out or unavailable, trying network/cell location fallback...');
+            navigator.geolocation.getCurrentPosition(
+              handleSuccess,
+              handleError,
+              { enableHighAccuracy: false, timeout: 7000, maximumAge: 300000 }
+            );
+          } else {
+            handleError(err);
           }
         },
-        options
+        { enableHighAccuracy: true, timeout: 6500, maximumAge: 0 }
       );
     },
 
