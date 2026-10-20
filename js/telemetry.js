@@ -562,21 +562,32 @@ const Telemetry = {
         updated_at: new Date().toISOString()
       };
 
-      const res = await fetch(`${creds.url}/rest/v1/visitor_telemetry`, {
-        method: 'POST',
-        headers: {
-          'apikey': creds.key,
-          'Authorization': `Bearer ${creds.key}`,
-          'Content-Type': 'application/json',
-          'Prefer': 'resolution=merge-duplicates'
-        },
-        body: JSON.stringify(payload)
-      });
-
-      // Also ensure existing row by session_id is patched with latest live GPS & dwell time
+      // 1. First attempt to update existing session row if it already exists
+      let patchUpdated = false;
       try {
-        await fetch(`${creds.url}/rest/v1/visitor_telemetry?session_id=eq.${encodeURIComponent(sessionRecord.session_id)}`, {
+        const patchRes = await fetch(`${creds.url}/rest/v1/visitor_telemetry?session_id=eq.${encodeURIComponent(sessionRecord.session_id)}`, {
           method: 'PATCH',
+          headers: {
+            'apikey': creds.key,
+            'Authorization': `Bearer ${creds.key}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (patchRes.ok) {
+          const updatedRows = await patchRes.json();
+          if (Array.isArray(updatedRows) && updatedRows.length > 0) {
+            patchUpdated = true;
+          }
+        }
+      } catch (_) {}
+
+      // 2. If session doesn't exist yet in Supabase, INSERT it as a new record
+      if (!patchUpdated) {
+        const insertRes = await fetch(`${creds.url}/rest/v1/visitor_telemetry`, {
+          method: 'POST',
           headers: {
             'apikey': creds.key,
             'Authorization': `Bearer ${creds.key}`,
@@ -585,16 +596,16 @@ const Telemetry = {
           },
           body: JSON.stringify(payload)
         });
-      } catch (_) {}
 
-      if (res.ok) {
-        sessionRecord.synced_to_supabase = true;
-        this.saveSessionLocally(sessionRecord);
-        return true;
-      } else {
-        console.warn('Supabase visitor log response:', res.status, await res.text());
-        return false;
+        if (!insertRes.ok) {
+          console.warn('Supabase visitor insert response:', insertRes.status, await insertRes.text());
+          return false;
+        }
       }
+
+      sessionRecord.synced_to_supabase = true;
+      this.saveSessionLocally(sessionRecord);
+      return true;
     } catch (err) {
       console.warn('Supabase telemetry sync failed:', err);
       return false;
