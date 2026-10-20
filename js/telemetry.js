@@ -499,7 +499,11 @@ const Telemetry = {
       };
     }
 
-    return null;
+    // 4. Default built-in Supabase credentials
+    return {
+      url: 'https://qhsryqtgkojmvulnkmfh.supabase.co',
+      key: 'sb_publishable_66GHB0ToIeESgeSVcyeNQQ_fUQWtxpc'
+    };
   },
 
   /**

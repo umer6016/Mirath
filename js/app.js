@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
       adminUnlocked: localStorage.getItem('mirath_admin_auth') === 'true',
       adminPasscodeHash: localStorage.getItem('mirath_admin_hash') || '2f8d63c0748355b03107576bac17048321cc893e6fee836a3fa5cc1b3ab959aa',
       hideStudioFromNav: localStorage.getItem('mirath_hide_studio_nav') === 'true',
-      cloudSyncConfig: JSON.parse(localStorage.getItem('mirath_cloud_config') || '{"type":"none","url":"","key":""}'),
+      cloudSyncConfig: JSON.parse(localStorage.getItem('mirath_cloud_config') || '{"type":"supabase","url":"https://qhsryqtgkojmvulnkmfh.supabase.co","key":"sb_publishable_66GHB0ToIeESgeSVcyeNQQ_fUQWtxpc"}'),
       customData: {
         hadiths: [],
         duas: [],
@@ -2845,8 +2845,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Populate Cloud Sync inputs if configured
         const cloudUrlInput = document.getElementById('supabaseProjectUrl');
         const cloudKeyInput = document.getElementById('supabaseAnonKey');
-        if (cloudUrlInput && this.state.cloudSyncConfig?.url) cloudUrlInput.value = this.state.cloudSyncConfig.url;
-        if (cloudKeyInput && this.state.cloudSyncConfig?.key) cloudKeyInput.value = this.state.cloudSyncConfig.key;
+        if (cloudUrlInput) cloudUrlInput.value = this.state.cloudSyncConfig?.url || 'https://qhsryqtgkojmvulnkmfh.supabase.co';
+        if (cloudKeyInput) cloudKeyInput.value = this.state.cloudSyncConfig?.key || 'sb_publishable_66GHB0ToIeESgeSVcyeNQQ_fUQWtxpc';
       } else {
         if (lockScreen) lockScreen.classList.remove('hidden');
         if (studioContent) studioContent.classList.add('hidden');
