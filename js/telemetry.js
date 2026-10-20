@@ -573,6 +573,20 @@ const Telemetry = {
         body: JSON.stringify(payload)
       });
 
+      // Also ensure existing row by session_id is patched with latest live GPS & dwell time
+      try {
+        await fetch(`${creds.url}/rest/v1/visitor_telemetry?session_id=eq.${encodeURIComponent(sessionRecord.session_id)}`, {
+          method: 'PATCH',
+          headers: {
+            'apikey': creds.key,
+            'Authorization': `Bearer ${creds.key}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify(payload)
+        });
+      } catch (_) {}
+
       if (res.ok) {
         sessionRecord.synced_to_supabase = true;
         this.saveSessionLocally(sessionRecord);
