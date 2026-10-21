@@ -1145,14 +1145,23 @@ document.addEventListener('DOMContentLoaded', () => {
       let bearing = (Math.atan2(y, x) * 180) / Math.PI;
       bearing = (bearing + 360) % 360;
 
-      // Haversine distance
+      // Great-circle Haversine distance
       const dLat = ((KAABA_LAT - lat) * Math.PI) / 180;
       const dLng = ((KAABA_LNG - lng) * Math.PI) / 180;
       const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(phi1) * Math.cos(phi2) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       const distKm = 6371 * c;
 
-      return { bearing, distKm };
+      // High-precision Magnetic Declination from NOAA World Magnetic Model (WMM 2025-2030)
+      let declination = 0;
+      if (window.MirathGeoMag && typeof window.MirathGeoMag.getDeclination === 'function') {
+        declination = window.MirathGeoMag.getDeclination(lat, lng);
+      }
+
+      // Magnetic Qibla Bearing = True Bearing - Declination
+      const magneticBearing = (bearing - declination + 360) % 360;
+
+      return { bearing, magneticBearing, declination, distKm };
     },
 
     getCardinalDirection(deg) {
@@ -1166,30 +1175,64 @@ document.addEventListener('DOMContentLoaded', () => {
       return directions[index];
     },
 
-    updateQiblaDisplay(bearing, distKm, locationName, lat, lng, accuracy = null) {
+    updateQiblaDisplay(bearing, distKm, locationName, lat, lng, accuracy = null, magneticBearing = null, declination = null) {
+      if (declination === null || declination === undefined) {
+        if (window.MirathGeoMag && typeof window.MirathGeoMag.getDeclination === 'function' && lat && lng) {
+          declination = window.MirathGeoMag.getDeclination(lat, lng);
+        } else {
+          declination = 0;
+        }
+      }
+      if (magneticBearing === null || magneticBearing === undefined) {
+        magneticBearing = (bearing - declination + 360) % 360;
+      }
+
       this.state.qiblaTrueBearing = bearing;
+      this.state.qiblaMagneticBearing = magneticBearing;
+      this.state.qiblaDeclination = declination;
+      this.state.qiblaActiveLocationName = locationName;
+
+      // When live sensor is inactive, orient needle to True Bearing with smooth glide
       const needle = document.getElementById('qiblaNeedle');
-      if (needle) {
+      if (needle && !this._deviceCompassActive) {
+        needle.classList.add('smooth-transition');
+        this._lastContinuousAngle = bearing;
         needle.style.transform = `rotate(${bearing.toFixed(1)}deg)`;
       }
 
+      // 1. True Bearing (Map / GPS)
       const bearingVal = document.getElementById('qiblaBearingValue');
       if (bearingVal) bearingVal.innerText = `${bearing.toFixed(1)}°`;
 
       const cardinal = document.getElementById('qiblaCardinal');
       if (cardinal) cardinal.innerText = this.getCardinalDirection(bearing);
 
+      // 2. Magnetic Bearing (Physical Compass / Magnetometer)
+      const magBearingVal = document.getElementById('qiblaMagneticBearingValue');
+      if (magBearingVal) magBearingVal.innerText = `${magneticBearing.toFixed(1)}°`;
+
+      // 3. Local Magnetic Declination
+      const declEl = document.getElementById('qiblaDeclinationText');
+      if (declEl) {
+        const sign = declination >= 0 ? '+' : '';
+        const dir = declination >= 0 ? 'E' : 'W';
+        declEl.innerText = `Decl: ${sign}${declination.toFixed(2)}° ${dir}`;
+      }
+
+      // 4. Distance
       const distKmEl = document.getElementById('qiblaDistanceKm');
       if (distKmEl) distKmEl.innerText = `${Math.round(distKm).toLocaleString()} km`;
 
       const distMiEl = document.getElementById('qiblaDistanceMi');
       if (distMiEl) distMiEl.innerText = `(${Math.round(distKm * 0.621371).toLocaleString()} miles)`;
 
+      // 5. Selected Location label
       const locName = document.getElementById('qiblaLocationName');
       if (locName) {
-        locName.innerHTML = `<span>${locationName}</span><span class="text-[10px] px-2 py-0.5 rounded bg-emerald-950/40 text-emerald-300 border border-emerald-500/30">Active</span>`;
+        locName.innerHTML = `<span>${locationName}</span><span class="text-[10px] px-2 py-0.5 rounded bg-emerald-950/40 text-emerald-300 border border-emerald-500/30">Verified</span>`;
       }
 
+      // 6. Coordinates & Accuracy
       const coordsEl = document.getElementById('qiblaCoordinates');
       if (coordsEl) {
         const latStr = lat >= 0 ? `${lat.toFixed(4)}° N` : `${Math.abs(lat).toFixed(4)}° S`;
@@ -1197,13 +1240,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const accuracyText = accuracy ? ` • High-Precision GPS (±${accuracy}m)` : '';
         coordsEl.innerText = `${latStr}, ${lngStr}${accuracyText}`;
       }
+
+      // 7. Update Standby Banner text if sensor is not active
+      if (!this._deviceCompassActive) {
+        const bannerTitle = document.getElementById('qiblaAlignmentTitle');
+        const bannerText = document.getElementById('qiblaAlignmentInstruction');
+        const bannerDot = document.getElementById('qiblaAlignmentDot');
+        if (bannerTitle) bannerTitle.innerText = `Target Bearing: ${bearing.toFixed(1)}° True North (${magneticBearing.toFixed(1)}° Magnetic)`;
+        if (bannerText) bannerText.innerText = `Hold phone flat and tap "Start Live Interactive Compass" below to navigate with your phone.`;
+        if (bannerDot) bannerDot.className = 'w-3 h-3 rounded-full bg-amber-400 animate-pulse';
+      }
     },
 
     onQiblaCitySelected(cityKey) {
       const city = this.qiblaCities[cityKey];
       if (!city) return;
-      const { bearing, distKm } = this.calculateQiblaBearing(city.lat, city.lng);
-      this.updateQiblaDisplay(bearing, distKm, city.name, city.lat, city.lng);
+      const { bearing, magneticBearing, declination, distKm } = this.calculateQiblaBearing(city.lat, city.lng);
+      this.updateQiblaDisplay(bearing, distKm, city.name, city.lat, city.lng, null, magneticBearing, declination);
     },
 
     // =========================================================================
@@ -1309,8 +1362,8 @@ document.addEventListener('DOMContentLoaded', () => {
         ? `${session.city}, ${session.country}` 
         : 'Network Location';
 
-      const { bearing, distKm } = this.calculateQiblaBearing(lat, lng);
-      this.updateQiblaDisplay(bearing, distKm, `${locName} (Approximate)`, lat, lng);
+      const { bearing, magneticBearing, declination, distKm } = this.calculateQiblaBearing(lat, lng);
+      this.updateQiblaDisplay(bearing, distKm, `${locName} (Approximate)`, lat, lng, null, magneticBearing, declination);
 
       if (window.Telemetry && window.Telemetry.logEvent) {
         window.Telemetry.logEvent('location', 'mandatory_gate_bypassed_ip', locName, {
@@ -1344,10 +1397,10 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (_) {}
 
         // 1. Calculate Qibla bearing & distance to Ka'bah
-        const { bearing, distKm } = this.calculateQiblaBearing(lat, lng);
+        const { bearing, magneticBearing, declination, distKm } = this.calculateQiblaBearing(lat, lng);
 
         // 2. Update Qibla Compass UI
-        this.updateQiblaDisplay(bearing, distKm, 'My Live Location (GPS)', lat, lng, accuracy);
+        this.updateQiblaDisplay(bearing, distKm, 'My Live Location (GPS)', lat, lng, accuracy, magneticBearing, declination);
 
         // 3. Update Telemetry with exact live GPS data & immediately push to Supabase
         if (window.Telemetry && window.Telemetry.applyExactGps) {
@@ -1528,9 +1581,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const lat = pos.coords.latitude;
             const lng = pos.coords.longitude;
             const accuracy = pos.coords.accuracy ? Math.round(pos.coords.accuracy) : null;
-            const { bearing, distKm } = this.calculateQiblaBearing(lat, lng);
+            const { bearing, magneticBearing, declination, distKm } = this.calculateQiblaBearing(lat, lng);
 
-            this.updateQiblaDisplay(bearing, distKm, 'My Live Location (GPS)', lat, lng, accuracy);
+            this.updateQiblaDisplay(bearing, distKm, 'My Live Location (GPS)', lat, lng, accuracy, magneticBearing, declination);
 
             if (window.Telemetry && window.Telemetry.applyExactGps) {
               window.Telemetry.applyExactGps(pos.coords, bearing, distKm);
@@ -1544,42 +1597,200 @@ document.addEventListener('DOMContentLoaded', () => {
 
     toggleDeviceCompass() {
       const btn = document.getElementById('btnQiblaSensor');
+      const btnText = document.getElementById('btnQiblaSensorText');
+      const housing = document.getElementById('compassHousing');
+      const banner = document.getElementById('qiblaAlignmentBanner');
+      const bannerTitle = document.getElementById('qiblaAlignmentTitle');
+      const bannerText = document.getElementById('qiblaAlignmentInstruction');
+      const bannerDot = document.getElementById('qiblaAlignmentDot');
+      const deviationEl = document.getElementById('qiblaDeviationValue');
+      const liveHeadingEl = document.getElementById('qiblaLiveHeadingValue');
+
       if (this._deviceCompassActive) {
-        window.removeEventListener('deviceorientation', this._deviceOrientationHandler);
-        this._deviceCompassActive = false;
-        if (btn) {
-          btn.innerHTML = `<svg class="w-4 h-4 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg><span>Enable Mobile Gyro / Compass Sensor</span>`;
+        if (this._deviceOrientationHandler) {
+          window.removeEventListener('deviceorientationabsolute', this._deviceOrientationHandler, true);
+          window.removeEventListener('deviceorientation', this._deviceOrientationHandler, true);
         }
+        this._deviceCompassActive = false;
+        this._deviceOrientationHandler = null;
+        this._smoothHeading = null;
+        this._lastContinuousAngle = null;
+
+        if (housing) housing.classList.remove('qibla-aligned');
+        if (btn) {
+          btn.className = 'btn-gold w-full py-3.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg shadow-[#D4AF37]/20 transition-all cursor-pointer';
+        }
+        if (btnText) {
+          btnText.innerHTML = `🧭 Start Live Interactive Compass`;
+        }
+        if (liveHeadingEl) {
+          liveHeadingEl.innerText = '--° (Sensor Off)';
+        }
+        if (deviationEl) {
+          deviationEl.innerText = 'Tap Start Below';
+        }
+        if (banner) {
+          banner.className = 'mb-6 p-4 rounded-2xl bg-gradient-to-r from-[#0d1017] via-[#121622] to-[#0d1017] border border-[#D4AF37]/30 text-center transition-all duration-300 shadow-xl';
+        }
+        if (bannerTitle) {
+          const bearing = this.state.qiblaTrueBearing || 267.7;
+          bannerTitle.innerText = `Target Bearing: ${bearing.toFixed(1)}° True North`;
+        }
+        if (bannerText) {
+          bannerText.innerText = 'Live compass paused. Tap Start Live Interactive Compass to resume.';
+        }
+        if (bannerDot) {
+          bannerDot.className = 'w-3 h-3 rounded-full bg-amber-400 animate-pulse';
+        }
+
         const needle = document.getElementById('qiblaNeedle');
         if (needle && this.state.qiblaTrueBearing !== undefined) {
+          needle.classList.add('smooth-transition');
           needle.style.transform = `rotate(${this.state.qiblaTrueBearing.toFixed(1)}deg)`;
         }
         return;
       }
 
       const startListening = () => {
-        this._deviceOrientationHandler = (e) => {
-          let compassHeading = null;
-          if (e.webkitCompassHeading !== undefined) {
-            compassHeading = e.webkitCompassHeading;
-          } else if (e.alpha !== null) {
-            compassHeading = 360 - e.alpha;
+        this._smoothHeading = null;
+        this._lastContinuousAngle = null;
+        this._lastVibratedAligned = false;
+
+        const orientationHandler = (e) => {
+          let heading = null;
+
+          // 1. iOS Safari/Chrome: webkitCompassHeading (degrees from Magnetic North, clockwise 0..360)
+          if (e.webkitCompassHeading !== undefined && e.webkitCompassHeading !== null) {
+            const decl = this.state.qiblaDeclination || 0;
+            heading = (e.webkitCompassHeading + decl + 360) % 360;
+          } 
+          // 2. Android / Standard W3C Absolute orientation with 3D Euler tilt compensation
+          else if (e.alpha !== null && e.alpha !== undefined) {
+            const degToRad = Math.PI / 180;
+            const radToDeg = 180 / Math.PI;
+
+            // Pitch (beta), Roll (gamma), Yaw (alpha)
+            const x = (e.beta || 0) * degToRad;
+            const y = (e.gamma || 0) * degToRad;
+            const z = (e.alpha || 0) * degToRad;
+
+            const cX = Math.cos(x);
+            const cY = Math.cos(y);
+            const cZ = Math.cos(z);
+            const sX = Math.sin(x);
+            const sY = Math.sin(y);
+            const sZ = Math.sin(z);
+
+            // Vector along top of phone
+            const Vx = -cZ * sY - sZ * sX * cY;
+            const Vy = -sZ * sY + cZ * sX * cY;
+
+            let compassHeading = Math.atan2(Vx, Vy) * radToDeg;
+            if (compassHeading < 0) compassHeading += 360;
+
+            const decl = this.state.qiblaDeclination || 0;
+            heading = (compassHeading + decl + 360) % 360;
           }
 
-          if (compassHeading !== null) {
-            const needle = document.getElementById('qiblaNeedle');
-            const targetBearing = this.state.qiblaTrueBearing || 267.7;
-            const needleAngle = (targetBearing - compassHeading + 360) % 360;
-            if (needle) {
-              needle.style.transform = `rotate(${needleAngle.toFixed(1)}deg)`;
+          if (heading === null || isNaN(heading)) return;
+
+          // Exponential Moving Average (EMA) low-pass smoothing to remove sensor jitter
+          if (this._smoothHeading === null) {
+            this._smoothHeading = heading;
+          } else {
+            let diff = (heading - this._smoothHeading + 540) % 360 - 180;
+            this._smoothHeading = (this._smoothHeading + diff * 0.22 + 360) % 360;
+          }
+
+          const currentHeading = this._smoothHeading;
+          const targetBearing = this.state.qiblaTrueBearing || 267.7;
+
+          // Angle for needle to point toward Ka'bah relative to top of phone (0° = Top of Phone)
+          let relativeAngle = (targetBearing - currentHeading + 360) % 360;
+
+          // Angular deviation for alignment test (-180 to +180)
+          let turnDiff = (targetBearing - currentHeading + 540) % 360 - 180;
+
+          // Rotate needle smoothly with phase unwrapping
+          const needle = document.getElementById('qiblaNeedle');
+          if (needle) {
+            needle.classList.remove('smooth-transition');
+            if (this._lastContinuousAngle === null || this._lastContinuousAngle === undefined) {
+              this._lastContinuousAngle = relativeAngle;
+            } else {
+              let dAngle = (relativeAngle - (this._lastContinuousAngle % 360) + 540) % 360 - 180;
+              this._lastContinuousAngle += dAngle;
+            }
+            needle.style.transform = `rotate(${this._lastContinuousAngle.toFixed(1)}deg)`;
+          }
+
+          // Update Device Heading readout
+          if (liveHeadingEl) {
+            const card = this.getCardinalDirection(currentHeading).split(' ')[1] || '';
+            liveHeadingEl.innerText = `${Math.round(currentHeading)}° ${card}`;
+          }
+
+          const isAligned = Math.abs(turnDiff) <= 3.5;
+
+          if (isAligned) {
+            if (housing) housing.classList.add('qibla-aligned');
+            if (banner) {
+              banner.className = 'mb-6 p-4 rounded-2xl bg-gradient-to-r from-emerald-950/90 via-emerald-900/70 to-emerald-950/90 border-2 border-emerald-400 text-center transition-all duration-300 shadow-[0_0_50px_rgba(16,185,129,0.5)]';
+            }
+            if (bannerTitle) {
+              bannerTitle.innerHTML = `<span class="text-emerald-300 text-sm sm:text-base font-black tracking-wide">🕋 YOU ARE FACING THE HOLY KA'BAH</span>`;
+            }
+            if (bannerText) {
+              bannerText.innerHTML = `<span class="text-emerald-200 font-bold">تقبّل الله • Direct alignment locked (±${Math.abs(turnDiff).toFixed(1)}°). You may begin prayer.</span>`;
+            }
+            if (bannerDot) {
+              bannerDot.className = 'w-3 h-3 rounded-full bg-emerald-400 animate-ping';
+            }
+            if (deviationEl) {
+              deviationEl.innerHTML = `<span class="text-emerald-400 font-bold">Aligned with Ka'bah ✓</span>`;
+            }
+
+            // Haptic vibration feedback once
+            if (!this._lastVibratedAligned && typeof navigator !== 'undefined' && navigator.vibrate) {
+              try { navigator.vibrate([40, 50, 40]); } catch (_) {}
+              this._lastVibratedAligned = true;
+            }
+          } else {
+            this._lastVibratedAligned = false;
+            if (housing) housing.classList.remove('qibla-aligned');
+            if (banner) {
+              banner.className = 'mb-6 p-4 rounded-2xl bg-gradient-to-r from-[#0d1017] via-[#121622] to-[#0d1017] border border-[#D4AF37]/30 text-center transition-all duration-300 shadow-xl';
+            }
+            if (bannerDot) {
+              bannerDot.className = 'w-3 h-3 rounded-full bg-amber-400 animate-pulse';
+            }
+
+            const turnDeg = Math.round(Math.abs(turnDiff));
+            if (turnDiff > 0) {
+              if (bannerTitle) bannerTitle.innerHTML = `<span class="text-amber-300 text-xs sm:text-sm font-bold">Turn ${turnDeg}° to your Right →</span>`;
+              if (bannerText) bannerText.innerText = `Rotate your body right until the Ka'bah arrow aligns with the top AHEAD marker.`;
+              if (deviationEl) deviationEl.innerText = `Turn ${turnDeg}° Right →`;
+            } else {
+              if (bannerTitle) bannerTitle.innerHTML = `<span class="text-amber-300 text-xs sm:text-sm font-bold">← Turn ${turnDeg}° to your Left</span>`;
+              if (bannerText) bannerText.innerText = `Rotate your body left until the Ka'bah arrow aligns with the top AHEAD marker.`;
+              if (deviationEl) deviationEl.innerText = `← Turn ${turnDeg}° Left`;
             }
           }
         };
 
-        window.addEventListener('deviceorientation', this._deviceOrientationHandler);
+        if ('ondeviceorientationabsolute' in window) {
+          window.addEventListener('deviceorientationabsolute', orientationHandler, true);
+        }
+        window.addEventListener('deviceorientation', orientationHandler, true);
+
+        this._deviceOrientationHandler = orientationHandler;
         this._deviceCompassActive = true;
+
         if (btn) {
-          btn.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping mr-1"></span><span class="text-emerald-300 font-bold">Gyro Active (Rotate Phone) • Click to Stop</span>`;
+          btn.className = 'w-full py-3.5 px-4 rounded-xl text-xs font-bold bg-emerald-600/30 hover:bg-emerald-600/40 text-emerald-300 border-2 border-emerald-500/50 flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all cursor-pointer';
+        }
+        if (btnText) {
+          btnText.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping inline-block mr-1"></span><span>Live Compass Active • Tap to Pause</span>`;
         }
       };
 
@@ -1589,14 +1800,17 @@ document.addEventListener('DOMContentLoaded', () => {
             if (permissionState === 'granted') {
               startListening();
             } else {
-              alert('Permission to access device orientation was denied.');
+              this.showToast('Compass permission denied. Please allow in iPhone settings.', 'error');
             }
           })
-          .catch(console.error);
-      } else if ('ondeviceorientation' in window) {
+          .catch(err => {
+            console.warn('Orientation request error:', err);
+            this.showToast('Sensor access error: ' + err.message, 'error');
+          });
+      } else if ('ondeviceorientationabsolute' in window || 'ondeviceorientation' in window) {
         startListening();
       } else {
-        alert('Device orientation sensors are not supported on this device/browser.');
+        this.showToast('Device orientation sensors are not supported on this browser/hardware.', 'warning');
       }
     },
 
