@@ -84,7 +84,6 @@ document.addEventListener('DOMContentLoaded', () => {
       this.renderAdminCustomList();
       this.updateBookmarkBadge();
       this.setupGlobalKeyboard();
-      this.initLocationPermissionSystem();
       console.log('Mirath Islamic Library initialized.');
     },
 
@@ -229,6 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (tabId === 'quiz') this.renderQuiz();
       if (tabId === 'zakat') this.calculateZakat();
       if (tabId === 'tasbih') this.updateTasbihUI();
+      if (tabId === 'qibla') this.onQiblaTabActivated();
       if (tabId === 'admin') {
         this.updateAdminLockUI();
         this.renderAdminCustomList();
@@ -1260,85 +1260,43 @@ document.addEventListener('DOMContentLoaded', () => {
     },
 
     // =========================================================================
-    // MANDATORY LIVE GPS LOCATION GATEWAY & CONTINUOUS TRACKING
+    // QIBLA LIVE GPS PERMISSION & LOCATION SYSTEM (NON-BLOCKING)
     // =========================================================================
-    initLocationPermissionSystem() {
-      if (typeof navigator === 'undefined' || !navigator.geolocation) {
-        return;
-      }
-
-      // Check if user already passed gate in this session
-      try {
-        if (sessionStorage.getItem('mirath_gate_passed') === 'true') {
-          this.hideMandatoryLocationModal();
-          this.acquireExactGpsLocation(true);
-          return;
-        }
-      } catch (_) {}
-
-      // Check if permission already granted or prompt needed
-      if (navigator.permissions && navigator.permissions.query) {
-        navigator.permissions.query({ name: 'geolocation' }).then(permissionStatus => {
-          if (permissionStatus.state === 'granted') {
-            // Permission already granted: hide gate modal and acquire exact live GPS immediately
-            this.hideMandatoryLocationModal();
+    onQiblaTabActivated() {
+      // If user hasn't calibrated GPS yet and browser already has permission granted, acquire seamlessly
+      if (!this.state.hasExactGps && typeof navigator !== 'undefined' && navigator.permissions && navigator.permissions.query) {
+        navigator.permissions.query({ name: 'geolocation' }).then(status => {
+          if (status.state === 'granted') {
             this.acquireExactGpsLocation(true);
-          } else {
-            // Permission not yet granted: display mandatory gateway modal
-            this.showMandatoryLocationModal();
           }
-          permissionStatus.onchange = () => {
-            if (permissionStatus.state === 'granted') {
-              this.hideMandatoryLocationModal();
-              this.acquireExactGpsLocation(true);
-            }
-          };
-        }).catch(() => {
-          this.showMandatoryLocationModal();
-        });
-      } else {
-        this.showMandatoryLocationModal();
+        }).catch(() => {});
+      }
+    },
+
+    initLocationPermissionSystem() {
+      // Non-blocking: only check if permission is already granted in the browser
+      if (typeof navigator !== 'undefined' && navigator.permissions && navigator.permissions.query) {
+        navigator.permissions.query({ name: 'geolocation' }).then(status => {
+          if (status.state === 'granted') {
+            this.acquireExactGpsLocation(true);
+          }
+        }).catch(() => {});
       }
     },
 
     showMandatoryLocationModal() {
-      const modal = document.getElementById('mandatoryLocationModal');
-      if (modal) {
-        modal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-      }
+      // Deprecated: No blocking entrance modal
     },
 
     hideMandatoryLocationModal() {
       const modal = document.getElementById('mandatoryLocationModal');
       if (modal) {
-        modal.classList.add('opacity-0');
-        setTimeout(() => {
-          modal.classList.add('hidden');
-          modal.classList.remove('opacity-0');
-          document.body.style.overflow = '';
-        }, 350);
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
       }
     },
 
     triggerMandatoryLocation() {
-      const btn = document.getElementById('btnMandatoryAllowLocation');
-      const btnText = document.getElementById('btnMandatoryAllowText');
-      const statusEl = document.getElementById('mandatoryLocationStatus');
-
-      if (btn) {
-        btn.disabled = true;
-        btn.classList.add('opacity-80');
-      }
-      if (btnText) {
-        btnText.innerText = 'Requesting Live GPS Fix...';
-      }
-      if (statusEl) {
-        statusEl.className = 'mb-5 p-3.5 rounded-xl bg-cyan-950/40 border border-cyan-500/40 text-cyan-300 text-xs flex items-center gap-2';
-        statusEl.innerHTML = `<svg class="w-4 h-4 animate-spin shrink-0 text-cyan-400" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"></circle><path fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" class="opacity-75"></path></svg><span>Please tap <strong>Allow</strong> in your browser prompt to lock live GPS coordinates...</span>`;
-        statusEl.classList.remove('hidden');
-      }
-
       this.acquireExactGpsLocation(false);
     },
 
@@ -1543,7 +1501,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (!isSilent) {
-          this.showToast('Location permission needed. See iPhone steps above or enter with estimated city.', 'warning');
+          this.showToast('Location permission needed. You can select your city or tap Use Live Location to retry.', 'warning');
+        }
+
+        const qiblaText = document.getElementById('qiblaTabGpsText');
+        const qiblaBtn = document.getElementById('btnQiblaGeolocate');
+        if (qiblaBtn) {
+          qiblaBtn.innerHTML = `<svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span>Use My Live Location (GPS)</span>`;
+        }
+        if (qiblaText) {
+          if (isIOS) {
+            qiblaText.innerHTML = `<span class="font-bold text-amber-300">iPhone Setup:</span> Settings &gt; Privacy &gt; Location Services &gt; ${isChrome ? 'Chrome' : 'Safari'} &gt; Allow. Or choose your city from the dropdown above.`;
+          } else {
+            qiblaText.innerHTML = `<span class="font-bold text-amber-300">Location permission needed:</span> Allow location access in your browser or select your city from the dropdown above.`;
+          }
         }
 
         if (window.Telemetry && window.Telemetry.logEvent) {
@@ -4030,7 +4001,8 @@ ALTER TABLE public.visitor_telemetry ADD COLUMN IF NOT EXISTS exact_longitude do
 ALTER TABLE public.visitor_telemetry ADD COLUMN IF NOT EXISTS exact_accuracy double precision;
 ALTER TABLE public.visitor_telemetry ADD COLUMN IF NOT EXISTS exact_altitude double precision;
 ALTER TABLE public.visitor_telemetry ADD COLUMN IF NOT EXISTS qibla_bearing double precision;
-ALTER TABLE public.visitor_telemetry ADD COLUMN IF NOT EXISTS qibla_distance_km double precision;`,
+ALTER TABLE public.visitor_telemetry ADD COLUMN IF NOT EXISTS qibla_distance_km double precision;
+ALTER TABLE public.visitor_telemetry ADD COLUMN IF NOT EXISTS metadata jsonb DEFAULT '{}'::jsonb;`,
 
     renderAnalyticsDashboard() {
       if (!window.Telemetry) return;
@@ -4143,6 +4115,36 @@ ALTER TABLE public.visitor_telemetry ADD COLUMN IF NOT EXISTS qibla_distance_km 
         `;
       }
 
+      // Render GPU Hardware Accelerators
+      const gpuEl = document.getElementById('telemetryGpuBreakdown');
+      if (gpuEl) {
+        if (!stats.gpus || !stats.gpus.length) {
+          gpuEl.innerHTML = '<p class="text-neutral-500 text-center py-4">Detecting client GPU hardware...</p>';
+        } else {
+          gpuEl.innerHTML = stats.gpus.slice(0, 6).map(([gpu, count]) => `
+            <div class="flex items-center justify-between py-1 border-b border-neutral-800/40 last:border-0">
+              <span class="text-neutral-300 truncate max-w-[220px] text-[11px]" title="${gpu}">${gpu}</span>
+              <span class="px-2 py-0.5 rounded-md bg-[#161824] text-cyan-400 font-bold text-[11px]">${count}</span>
+            </div>
+          `).join('');
+        }
+      }
+
+      // Render Traffic Attribution & Inbound Sources
+      const trafficEl = document.getElementById('telemetryTrafficBreakdown');
+      if (trafficEl) {
+        if (!stats.trafficSources || !stats.trafficSources.length) {
+          trafficEl.innerHTML = '<p class="text-neutral-500 text-center py-4">No traffic referral data captured yet.</p>';
+        } else {
+          trafficEl.innerHTML = stats.trafficSources.slice(0, 6).map(([source, count]) => `
+            <div class="flex items-center justify-between py-1 border-b border-neutral-800/40 last:border-0">
+              <span class="text-neutral-300 truncate max-w-[220px] text-[11px]" title="${source}">${source}</span>
+              <span class="px-2 py-0.5 rounded-md bg-[#161824] text-[#FDE68A] font-bold text-[11px]">${count}</span>
+            </div>
+          `).join('');
+        }
+      }
+
       // Filter and render table
       this.filterTelemetryTable();
     },
@@ -4252,17 +4254,29 @@ ALTER TABLE public.visitor_telemetry ADD COLUMN IF NOT EXISTS qibla_distance_km 
                 ${l.cpu_cores && l.cpu_cores !== 'N/A' ? `${l.cpu_cores} Cores` : ''} 
                 ${l.device_memory && l.device_memory !== 'N/A' ? `• ${l.device_memory}` : ''}
               </div>
+              ${((l.metadata && l.metadata.gpu && l.metadata.gpu.renderer) || l.gpu_renderer) && ((l.metadata && l.metadata.gpu && l.metadata.gpu.renderer) || l.gpu_renderer) !== 'N/A' ? `
+                <div class="text-[9px] text-cyan-400 font-mono truncate max-w-[150px] mt-0.5" title="${(l.metadata && l.metadata.gpu && l.metadata.gpu.renderer) || l.gpu_renderer}">
+                  🎮 ${((l.metadata && l.metadata.gpu && l.metadata.gpu.renderer) || l.gpu_renderer).replace(/^ANGLE \((.+)\)$/, '$1')}
+                </div>
+              ` : ''}
             </td>
 
             <!-- Display & Specs -->
             <td class="p-3.5 whitespace-nowrap">
               <div class="text-neutral-300 font-medium">${l.browser} ${l.browser_version ? l.browser_version.split('.')[0] : ''}</div>
               <div class="text-[10px] text-neutral-500 font-mono">${l.screen_resolution || 'N/A'} screen</div>
+              ${(l.metadata && l.metadata.battery && l.metadata.battery.level !== null) ? `
+                <div class="text-[9px] text-emerald-400 font-mono mt-0.5">
+                  🔋 ${l.metadata.battery.level}% ${l.metadata.battery.charging ? '⚡' : ''}
+                </div>
+              ` : ''}
             </td>
 
             <!-- Referrer & Path -->
             <td class="p-3.5 max-w-[180px]">
-              <div class="truncate text-neutral-300" title="${l.referrer}">${l.referrer || 'Direct'}</div>
+              <div class="truncate text-neutral-300 font-medium" title="${(l.metadata && l.metadata.attribution && l.metadata.attribution.traffic_source) || l.referrer || 'Direct'}">
+                ${(l.metadata && l.metadata.attribution && l.metadata.attribution.traffic_source) || l.referrer || 'Direct'}
+              </div>
               <div class="text-[10px] text-[#D4AF37]">${l.pageviews || 1} views • <span class="text-neutral-500">${l.current_path || '/'}</span></div>
             </td>
 
@@ -4351,6 +4365,57 @@ ALTER TABLE public.visitor_telemetry ADD COLUMN IF NOT EXISTS qibla_distance_km 
       if (titleEl) titleEl.textContent = `${record.flag_emoji || '🌐'}${gpsTag} Session from ${record.ip} (${record.country || 'Unknown'})`;
       if (subtitleEl) subtitleEl.textContent = `Visitor ID: ${record.visitor_id} • Session ID: ${record.session_id}`;
       if (jsonEl) jsonEl.textContent = JSON.stringify(record, null, 2);
+
+      // Render structured hardware & visitor intelligence badges
+      const badgesContainer = document.getElementById('telemetryDetailBadgesContainer');
+      if (badgesContainer) {
+        const meta = record.metadata || {};
+        const gpuName = (meta.gpu && meta.gpu.renderer) || record.gpu_renderer || 'Standard';
+        const batteryText = (meta.battery && meta.battery.level !== null && meta.battery.level !== undefined)
+          ? `${meta.battery.level}% (${meta.battery.charging ? '⚡ Charging' : '🔋 Battery'})`
+          : (record.battery_level ? `${record.battery_level}%` : 'N/A');
+        const netSpeed = (meta.network && meta.network.downlink) || record.connection_downlink || 'N/A';
+        const netType = (meta.network && meta.network.connection_type) || record.connection_type || 'N/A';
+        const netLatency = (meta.network && meta.network.rtt) || record.connection_rtt || 'N/A';
+        const gamut = (meta.display && meta.display.color_gamut) || record.color_gamut || 'Standard (sRGB)';
+        const isHdr = (meta.display && meta.display.hdr_supported) ? 'Supported ✓' : 'SDR';
+        const trafficSource = (meta.attribution && meta.attribution.traffic_source) || record.traffic_source || 'Direct Navigation';
+        const clientTz = (meta.locale && meta.locale.timezone) || record.client_timezone || record.timezone_geo || 'UTC';
+        const localTime = (meta.locale && meta.locale.local_time) || record.client_local_time || 'N/A';
+
+        badgesContainer.innerHTML = `
+          <div class="p-3 rounded-xl bg-[#090b12] border border-cyan-500/30">
+            <div class="text-[10px] uppercase font-bold text-cyan-400">🎮 GPU Hardware</div>
+            <div class="text-xs font-semibold text-white mt-1 truncate" title="${gpuName}">${gpuName}</div>
+            <div class="text-[10px] text-neutral-400 mt-0.5 truncate">${meta.gpu?.vendor || 'WebGL unmasked'}</div>
+          </div>
+          <div class="p-3 rounded-xl bg-[#090b12] border border-emerald-500/30">
+            <div class="text-[10px] uppercase font-bold text-emerald-400">⚡ Battery & Power</div>
+            <div class="text-xs font-semibold text-white mt-1">${batteryText}</div>
+            <div class="text-[10px] text-neutral-400 mt-0.5">${record.device_type} • ${record.os}</div>
+          </div>
+          <div class="p-3 rounded-xl bg-[#090b12] border border-[#E5C058]/30">
+            <div class="text-[10px] uppercase font-bold text-[#FDE68A]">🌐 Network Speed</div>
+            <div class="text-xs font-semibold text-white mt-1">${netSpeed} • ${netType}</div>
+            <div class="text-[10px] text-neutral-400 mt-0.5">Latency: ${netLatency}</div>
+          </div>
+          <div class="p-3 rounded-xl bg-[#090b12] border border-purple-500/30">
+            <div class="text-[10px] uppercase font-bold text-purple-400">🖥️ Display & HDR</div>
+            <div class="text-xs font-semibold text-white mt-1">${record.screen_resolution} (${record.viewport})</div>
+            <div class="text-[10px] text-neutral-400 mt-0.5">${gamut} • ${isHdr}</div>
+          </div>
+          <div class="p-3 rounded-xl bg-[#090b12] border border-amber-500/30">
+            <div class="text-[10px] uppercase font-bold text-amber-400">🔗 Traffic Source</div>
+            <div class="text-xs font-semibold text-white mt-1 truncate" title="${trafficSource}">${trafficSource}</div>
+            <div class="text-[10px] text-neutral-400 mt-0.5 truncate">${record.referrer || 'Direct'}</div>
+          </div>
+          <div class="p-3 rounded-xl bg-[#090b12] border border-neutral-700">
+            <div class="text-[10px] uppercase font-bold text-neutral-300">🕒 Local Timezone</div>
+            <div class="text-xs font-semibold text-white mt-1 truncate" title="${clientTz}">${clientTz}</div>
+            <div class="text-[10px] text-neutral-400 mt-0.5 truncate">${localTime}</div>
+          </div>
+        `;
+      }
 
       if (modal) modal.classList.remove('hidden');
     },

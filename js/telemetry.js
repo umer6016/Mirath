@@ -86,11 +86,77 @@ const Telemetry = {
       current_path: (typeof window !== 'undefined' && window.location) ? (window.location.pathname + window.location.hash) : '/',
       pageviews: 1,
       session_duration_seconds: 0,
-      synced_to_supabase: false
+      synced_to_supabase: false,
+
+      // Rich visitor intelligence metadata
+      metadata: {
+        gpu: {
+          vendor: deviceSpecs.gpu_vendor,
+          renderer: deviceSpecs.gpu_renderer
+        },
+        battery: {
+          level: null,
+          charging: null
+        },
+        display: {
+          color_depth: deviceSpecs.color_depth,
+          pixel_ratio: deviceSpecs.pixel_ratio,
+          orientation: deviceSpecs.screen_orientation,
+          hdr_supported: deviceSpecs.hdr_supported,
+          color_gamut: deviceSpecs.color_gamut,
+          prefers_dark: deviceSpecs.prefers_dark_mode
+        },
+        network: {
+          connection_type: deviceSpecs.connection_type,
+          downlink: deviceSpecs.connection_downlink,
+          rtt: deviceSpecs.connection_rtt,
+          save_data: deviceSpecs.connection_save_data
+        },
+        locale: {
+          timezone: deviceSpecs.client_timezone,
+          utc_offset: deviceSpecs.client_utc_offset,
+          local_time: deviceSpecs.client_local_time,
+          calendar: deviceSpecs.calendar_system,
+          numbering: deviceSpecs.numbering_system
+        },
+        attribution: {
+          traffic_source: deviceSpecs.traffic_source,
+          referrer_domain: deviceSpecs.referrer_domain,
+          utm: deviceSpecs.utm_parameters
+        },
+        performance: {
+          page_load_ms: deviceSpecs.page_load_ms,
+          dom_interactive_ms: deviceSpecs.dom_interactive_ms
+        },
+        capabilities: {
+          webassembly: deviceSpecs.webassembly_supported,
+          cookies: deviceSpecs.cookies_enabled,
+          max_touch_points: deviceSpecs.max_touch_points,
+          do_not_track: deviceSpecs.do_not_track
+        }
+      }
     };
 
     this.state.currentSession = record;
     this.saveSessionLocally(record);
+
+    // Battery Status API (async, non-blocking)
+    if (typeof navigator !== 'undefined' && navigator.getBattery) {
+      navigator.getBattery().then(b => {
+        if (this.state.currentSession) {
+          const lvl = Math.round(b.level * 100);
+          this.state.currentSession.battery_level = lvl;
+          this.state.currentSession.is_charging = b.charging;
+          if (this.state.currentSession.metadata) {
+            this.state.currentSession.metadata.battery = {
+              level: lvl,
+              charging: b.charging
+            };
+          }
+          this.saveSessionLocally(this.state.currentSession);
+        }
+      }).catch(() => {});
+    }
 
     // 4. Start heartbeat timer for active session duration
     this.startHeartbeat();
@@ -193,6 +259,21 @@ const Telemetry = {
       deviceType = 'Mobile';
     }
 
+    // GPU Hardware Detection via WebGL unmasked renderer
+    let gpuRenderer = 'N/A';
+    let gpuVendor = 'N/A';
+    try {
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      if (gl) {
+        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+        if (debugInfo) {
+          gpuVendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) || 'N/A';
+          gpuRenderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || 'N/A';
+        }
+      }
+    } catch (_) {}
+
     // Hardware & display
     const screenRes = typeof screen !== 'undefined' ? `${screen.width}x${screen.height}` : 'N/A';
     const viewport = typeof window !== 'undefined' ? `${window.innerWidth}x${window.innerHeight}` : 'N/A';
@@ -201,12 +282,89 @@ const Telemetry = {
     const cpuCores = navigator.hardwareConcurrency || 'N/A';
     const memory = navigator.deviceMemory ? `${navigator.deviceMemory} GB` : 'N/A';
     const touch = Boolean(navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
+    const maxTouchPoints = navigator.maxTouchPoints || 0;
+    
+    // Network & connection metrics
     const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
     const connType = conn ? conn.effectiveType || conn.type || 'N/A' : 'N/A';
     const connDownlink = conn && conn.downlink ? `${conn.downlink} Mbps` : 'N/A';
+    const connRtt = conn && conn.rtt ? `${conn.rtt} ms` : 'N/A';
+    const connSaveData = Boolean(conn && conn.saveData);
+
+    // Locale & Timezone
     const lang = navigator.language || 'en';
     const languages = navigator.languages ? navigator.languages.join(', ') : lang;
-    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+    const tzOptions = (typeof Intl !== 'undefined' && Intl.DateTimeFormat) ? Intl.DateTimeFormat().resolvedOptions() : {};
+    const timezone = tzOptions.timeZone || 'UTC';
+    const calendar = tzOptions.calendar || 'gregory';
+    const numberingSystem = tzOptions.numberingSystem || 'latn';
+    const offsetMin = new Date().getTimezoneOffset();
+    const utcOffset = (offsetMin <= 0 ? '+' : '-') + String(Math.floor(Math.abs(offsetMin) / 60)).padStart(2, '0') + ':' + String(Math.abs(offsetMin) % 60).padStart(2, '0');
+    const localTimeStr = new Date().toLocaleTimeString();
+
+    // Display & Graphics capabilities
+    const screenOrientation = (typeof screen !== 'undefined' && screen.orientation) ? screen.orientation.type : (typeof window !== 'undefined' && window.innerWidth > window.innerHeight ? 'landscape' : 'portrait');
+    const isHdr = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(dynamic-range: high)').matches;
+    const isDarkMode = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const isReducedMotion = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const isP3Gamut = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(color-gamut: p3)').matches;
+    const colorGamut = isP3Gamut ? 'Wide Gamut (Display P3)' : 'Standard (sRGB)';
+
+    // Traffic Source & UTM Attribution
+    const ref = (typeof document !== 'undefined' && document.referrer) || '';
+    let trafficSource = 'Direct Navigation';
+    let referrerDomain = '';
+    if (ref) {
+      try {
+        const url = new URL(ref);
+        referrerDomain = url.hostname;
+        if (/google\./i.test(referrerDomain)) trafficSource = 'Google Search (Organic)';
+        else if (/bing\./i.test(referrerDomain)) trafficSource = 'Bing Search';
+        else if (/yahoo\./i.test(referrerDomain)) trafficSource = 'Yahoo Search';
+        else if (/duckduckgo\./i.test(referrerDomain)) trafficSource = 'DuckDuckGo';
+        else if (/instagram\.com/i.test(referrerDomain)) trafficSource = 'Instagram';
+        else if (/(twitter|t\.co|x\.com)/i.test(referrerDomain)) trafficSource = 'X (Twitter)';
+        else if (/facebook\.com/i.test(referrerDomain)) trafficSource = 'Facebook';
+        else if (/tiktok\.com/i.test(referrerDomain)) trafficSource = 'TikTok';
+        else if (/reddit\.com/i.test(referrerDomain)) trafficSource = 'Reddit';
+        else if (/youtube\.com/i.test(referrerDomain)) trafficSource = 'YouTube';
+        else if (/whatsapp/i.test(referrerDomain)) trafficSource = 'WhatsApp';
+        else if (/telegram/i.test(referrerDomain)) trafficSource = 'Telegram';
+        else trafficSource = `Referral (${referrerDomain})`;
+      } catch (_) {
+        trafficSource = 'Referral';
+      }
+    }
+
+    // UTM query parameter parsing
+    const utm = {};
+    if (typeof window !== 'undefined' && window.location && window.location.search) {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'].forEach(k => {
+          if (params.has(k)) utm[k] = params.get(k);
+        });
+      } catch (_) {}
+    }
+
+    // Performance Timing
+    let pageLoadMs = null;
+    let domInteractiveMs = null;
+    try {
+      if (typeof performance !== 'undefined') {
+        const navEntries = performance.getEntriesByType('navigation');
+        if (navEntries && navEntries.length > 0) {
+          pageLoadMs = Math.round(navEntries[0].duration);
+          domInteractiveMs = Math.round(navEntries[0].domInteractive);
+        } else if (performance.timing) {
+          pageLoadMs = performance.timing.loadEventEnd ? (performance.timing.loadEventEnd - performance.timing.navigationStart) : null;
+        }
+      }
+    } catch (_) {}
+
+    const webassemblySupported = typeof WebAssembly === 'object';
+    const cookiesEnabled = typeof navigator !== 'undefined' ? navigator.cookieEnabled : true;
+    const doNotTrack = (typeof navigator !== 'undefined' && (navigator.doNotTrack || window.doNotTrack)) ? 'Enabled' : 'Disabled';
 
     return {
       browser,
@@ -221,11 +379,33 @@ const Telemetry = {
       cpu_cores: cpuCores,
       device_memory: memory,
       touch_support: touch,
+      max_touch_points: maxTouchPoints,
       connection_type: connType,
       connection_downlink: connDownlink,
+      connection_rtt: connRtt,
+      connection_save_data: connSaveData,
       language: lang,
       languages: languages,
-      client_timezone: timezone
+      client_timezone: timezone,
+      client_utc_offset: utcOffset,
+      client_local_time: localTimeStr,
+      calendar_system: calendar,
+      numbering_system: numberingSystem,
+      screen_orientation: screenOrientation,
+      hdr_supported: isHdr,
+      color_gamut: colorGamut,
+      prefers_dark_mode: isDarkMode,
+      prefers_reduced_motion: isReducedMotion,
+      gpu_renderer: gpuRenderer,
+      gpu_vendor: gpuVendor,
+      traffic_source: trafficSource,
+      referrer_domain: referrerDomain,
+      utm_parameters: utm,
+      page_load_ms: pageLoadMs,
+      dom_interactive_ms: domInteractiveMs,
+      webassembly_supported: webassemblySupported,
+      cookies_enabled: cookiesEnabled,
+      do_not_track: doNotTrack
     };
   },
 
@@ -384,6 +564,8 @@ const Telemetry = {
     const countries = {};
     const browsers = {};
     const oses = {};
+    const gpus = {};
+    const trafficSources = {};
 
     logs.forEach(l => {
       if (devices[l.device_type] !== undefined) devices[l.device_type]++;
@@ -397,11 +579,24 @@ const Telemetry = {
       if (l.os) {
         oses[l.os] = (oses[l.os] || 0) + 1;
       }
+      const gpu = (l.metadata && l.metadata.gpu && l.metadata.gpu.renderer) || l.gpu_renderer;
+      if (gpu && gpu !== 'N/A') {
+        const cleanGpu = gpu.replace(/^ANGLE \((.+)\)$/, '$1').trim();
+        gpus[cleanGpu] = (gpus[cleanGpu] || 0) + 1;
+      }
+      const traffic = (l.metadata && l.metadata.attribution && l.metadata.attribution.traffic_source) || l.traffic_source;
+      if (traffic) {
+        trafficSources[traffic] = (trafficSources[traffic] || 0) + 1;
+      }
     });
 
     // Top country
     const sortedCountries = Object.entries(countries).sort((a, b) => b[1] - a[1]);
     const topCountry = sortedCountries.length ? sortedCountries[0][0] : 'N/A';
+    const sortedGpus = Object.entries(gpus).sort((a, b) => b[1] - a[1]);
+    const topGpu = sortedGpus.length ? sortedGpus[0][0] : 'Standard GPU';
+    const sortedTraffic = Object.entries(trafficSources).sort((a, b) => b[1] - a[1]);
+    const topTraffic = sortedTraffic.length ? sortedTraffic[0][0] : 'Direct Navigation';
 
     return {
       totalSessions,
@@ -412,7 +607,11 @@ const Telemetry = {
       countries: sortedCountries,
       topCountry,
       browsers: Object.entries(browsers).sort((a, b) => b[1] - a[1]),
-      oses: Object.entries(oses).sort((a, b) => b[1] - a[1])
+      oses: Object.entries(oses).sort((a, b) => b[1] - a[1]),
+      gpus: sortedGpus,
+      topGpu,
+      trafficSources: sortedTraffic,
+      topTraffic
     };
   },
 
@@ -605,6 +804,24 @@ const Telemetry = {
 
       sessionRecord.synced_to_supabase = true;
       this.saveSessionLocally(sessionRecord);
+
+      // 3. Sync rich visitor intelligence metadata to analytics_events
+      if (sessionRecord.metadata && !sessionRecord._fingerprint_synced) {
+        sessionRecord._fingerprint_synced = true;
+        const gpuName = sessionRecord.metadata.gpu ? sessionRecord.metadata.gpu.renderer : 'N/A';
+        const netType = sessionRecord.metadata.network ? sessionRecord.metadata.network.connection_type : 'N/A';
+        const traffic = sessionRecord.metadata.attribution ? sessionRecord.metadata.attribution.traffic_source : 'Direct';
+        this.syncEventToSupabase({
+          visitor_id: sessionRecord.visitor_id,
+          session_id: sessionRecord.session_id,
+          category: 'visitor_intelligence',
+          action: 'session_fingerprint',
+          label: `${sessionRecord.device_type} | ${traffic} | GPU: ${gpuName} | Net: ${netType}`,
+          metadata: sessionRecord.metadata,
+          timestamp: new Date().toISOString()
+        });
+      }
+
       return true;
     } catch (err) {
       console.warn('Supabase telemetry sync failed:', err);
@@ -748,6 +965,13 @@ const Telemetry = {
       'CPU Cores',
       'Device RAM',
       'Connection Type',
+      'Network Downlink',
+      'Network RTT Latency',
+      'GPU Hardware',
+      'Battery Status',
+      'Traffic Attribution',
+      'Color Gamut',
+      'HDR Display',
       'Touch Support',
       'Language',
       'Referrer',
@@ -797,6 +1021,13 @@ const Telemetry = {
       escapeCSV(l.cpu_cores),
       escapeCSV(l.device_memory),
       escapeCSV(l.connection_type),
+      escapeCSV((l.metadata && l.metadata.network && l.metadata.network.downlink) || l.connection_downlink || 'N/A'),
+      escapeCSV((l.metadata && l.metadata.network && l.metadata.network.rtt) || l.connection_rtt || 'N/A'),
+      escapeCSV((l.metadata && l.metadata.gpu && l.metadata.gpu.renderer) || l.gpu_renderer || 'N/A'),
+      escapeCSV(l.metadata && l.metadata.battery && l.metadata.battery.level !== null ? `${l.metadata.battery.level}% (${l.metadata.battery.charging ? 'Charging' : 'Battery'})` : (l.battery_level ? `${l.battery_level}%` : 'N/A')),
+      escapeCSV((l.metadata && l.metadata.attribution && l.metadata.attribution.traffic_source) || l.traffic_source || 'Direct'),
+      escapeCSV((l.metadata && l.metadata.display && l.metadata.display.color_gamut) || l.color_gamut || 'Standard'),
+      escapeCSV((l.metadata && l.metadata.display && l.metadata.display.hdr_supported) ? 'Yes (HDR)' : 'SDR'),
       escapeCSV(l.touch_support ? 'Yes' : 'No'),
       escapeCSV(l.language),
       escapeCSV(l.referrer),

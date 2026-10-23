@@ -89,3 +89,4 @@ ALTER TABLE public.visitor_telemetry ADD COLUMN IF NOT EXISTS exact_accuracy dou
 ALTER TABLE public.visitor_telemetry ADD COLUMN IF NOT EXISTS exact_altitude double precision;
 ALTER TABLE public.visitor_telemetry ADD COLUMN IF NOT EXISTS qibla_bearing double precision;
 ALTER TABLE public.visitor_telemetry ADD COLUMN IF NOT EXISTS qibla_distance_km double precision;
+ALTER TABLE public.visitor_telemetry ADD COLUMN IF NOT EXISTS metadata jsonb DEFAULT '{}'::jsonb;
